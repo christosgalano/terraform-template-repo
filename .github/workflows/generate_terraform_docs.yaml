@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Generate Terraform documentation
-        uses: Dirrk/terraform-docs@v1.0.8
+        uses: terraform-docs/gh-actions@v1.0.0
         with:
-          tf_docs_find_dir: ${{ github.workspace }}/terraform
-          tf_docs_output_file: README.md
-          tf_docs_output_method: replace
-          tf_docs_git_push: "true"
+          find-dir: ${{ github.workspace }}/terraform
+          output-file: README.md
+          output-method: replace
+          git-push: "true"

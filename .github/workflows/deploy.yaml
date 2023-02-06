@@ -33,7 +33,6 @@ jobs:
       - name: Terraform fmt
         id: fmt
         run: terraform fmt -check
-        continue-on-error: true
 
       - name: Terraform init
         run: terraform init
@@ -56,10 +55,3 @@ jobs:
       - name: Terraform apply
         id: apply
         run: terraform apply -no-color -auto-approve
-
-      # Here we handle any errors that might have occurred during the Terraform fmt and exit accordingly
-      - name: Check Terraform fmt outcome
-        if: steps.fmt.outcome == 'failure'
-        run: |
-          echo "Run `terraform fmt` to format your code."
-          exit 1
