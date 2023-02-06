@@ -18,9 +18,9 @@ module "resource_group" {
   tags     = local.rg_tags
 }
 
-module "identity" {
-  source              = "./modules/identity"
-  name                = "id-${local.suffix}"
-  location            = var.location
-  resource_group_name = module.resource_group.name
-}
+# module "identity" {
+#   source              = "./modules/identity"
+#   name                = "id-${local.suffix}"
+#   location            = var.location
+#   resource_group_name = module.resource_group.name
+# }
