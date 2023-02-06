@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  generate-tf-docs:
-    name: generate-tf-docs
+  generate-terraform-docs:
+    name: generate-terraform-docs
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Generate Terraform docs
+      - name: Generate Terraform documentation
         uses: Dirrk/terraform-docs@v1.0.8
         with:
           tf_docs_find_dir: ${{ github.workspace }}/terraform
