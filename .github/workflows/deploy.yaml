@@ -63,6 +63,7 @@ jobs:
         run: terraform validate -no-color
 
       - name: Terraform plan
+        # if: github.event_name == 'pull_request'
         id: plan
         run: |
           terraform plan \
@@ -99,16 +100,22 @@ jobs:
               repo: context.repo.repo,
               body: output
             })
-      
+
+      - name: Terraform plan status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
       - name: Terraform apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         id: apply
         run: |
           terraform apply -no-color -auto-approve \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
-      
+
       - name: Upload state file
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: actions/upload-artifact@v3
         with:
           name: terraform-state
