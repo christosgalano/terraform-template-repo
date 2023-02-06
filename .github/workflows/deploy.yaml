@@ -68,7 +68,7 @@ jobs:
         # if: github.event_name == 'pull_request'
         id: plan
         env:
-          TF_LOG: TRACE
+          TF_LOG: DEBUG
         run: |
           terraform plan \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
