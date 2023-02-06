@@ -1,0 +1,62 @@
+name: deploy
+run-name: ${{ github.workflow }}
+on:
+  workflow_dispatch:
+
+# Set up permissions:
+# - read the repository's content
+# - write id-token (needed for OIDC)
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+
+    # Set the default working directory to where the Terraform files are located
+    defaults:
+      run:
+        working-directory: ${{ github.workspace }}/terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Terraform validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        id: plan
+        run: |
+          terraform plan -no-color -out=plan.out
+          terraform show -json plan.out > plan.out.json
+
+      # - name: terraform-compliance
+      #   id: terraform-compliance
+      #   run: |
+      #     terraform-compliance -p ./plan.out.json -f git:ssh://git@github.com/terraform-compliance/user-friendly-features.git
+
+      - name: Terraform apply
+        id: apply
+        run: terraform apply -no-color -auto-approve
+
+      # Here we handle any errors that might have occurred during the Terraform fmt and exit accordingly
+      - name: Check Terraform fmt outcome
+        if: steps.fmt.outcome == 'failure'
+        run: |
+          echo "Run `terraform fmt` to format your code."
+          exit 1
