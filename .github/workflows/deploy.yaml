@@ -41,6 +41,7 @@ jobs:
         with:
           working_directory: ${{ env.WORKING_DIR }}
           sarif_file: tfsec.sarif
+          additional_args: --tfvars-file
 
       # - name: Upload SARIF file
       #   uses: github/codeql-action/upload-sarif@v2
