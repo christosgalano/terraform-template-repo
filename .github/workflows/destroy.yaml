@@ -1,0 +1,38 @@
+# This workflow requires an approval and based on that destroys our infrastructure.
+name: destroy
+run-name: ${{ github.workflow }}
+on:
+  workflow_dispatch:
+
+jobs:
+  approve-infra-teardown:
+    name: approve-infra-teardown
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Manual Workflow Approval
+        uses: trstringer/manual-approval@v1.8.0
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: christosgalano
+          minimum-approvals: 1
+          issue-title: "Approve infrastructure teardown"
+          exclude-workflow-initiator-as-approver: false
+  destroy:
+    name: destroy
+    needs: approve
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.WORKING_DIR }}
+    steps:
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - name: Terraform destroy
+        run: terraform destroy
