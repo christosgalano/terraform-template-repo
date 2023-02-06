@@ -7,9 +7,6 @@ jobs:
   generate-tf-docs:
     name: generate-tf-docs
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ github.workspace }}/terraform
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -17,7 +14,7 @@ jobs:
       - name: Generate Terraform docs
         uses: Dirrk/terraform-docs@v1.0.8
         with:
-          tf_docs_find_dir: ./modules
+          tf_docs_find_dir: ${{ github.workspace }}/terraform/modules
           tf_docs_output_file: README.md
           tf_docs_output_method: inject
           tf_docs_git_push: "true"
