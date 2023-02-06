@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+    env:
+      WORKING_DIR: ${{ github.workspace }}/terraform # working directory where the Terraform files are located
     defaults:
       run:
         shell: bash
