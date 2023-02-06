@@ -3,12 +3,23 @@ name: deploy
 run-name: ${{ github.workflow }}
 on:
   workflow_dispatch:
+  # push:
+  #   branches:
+  #   - main
+  #   paths:
+  #   - terraform/**
+  # pull_request:
+  #   branches:
+  #   - main
+  #   paths:
+  #   - terraform/**
 
 permissions:
   actions: read
   contents: read
   id-token: write
   security-events: write
+  pull-requests: write
 
 env:
   WORKING_DIR: ${{ github.workspace }}/terraform # working directory where the Terraform files are located
@@ -25,23 +36,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # - uses: actions/cache@v3
-      #   name: Cache plugin dir
+      # - name: Run tfsec
+      #   uses: aquasecurity/tfsec-sarif-action@v0.1.4
       #   with:
-      #     path: ~/.tflint.d/plugins
-      #     key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
-
-      # - name: Setup TFLint
-      #   uses: terraform-linters/setup-tflint@v3
-
-      # - name: TFLint init
-      #   run: tflint --init
-
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-sarif-action@v0.1.4
-        with:
-          working_directory: ${{ env.WORKING_DIR }}
-          sarif_file: tfsec.sarif
+      #     working_directory: ${{ env.WORKING_DIR }}
+      #     sarif_file: tfsec.sarif
 
       # - name: Upload SARIF file
       #   uses: github/codeql-action/upload-sarif@v2
@@ -71,6 +70,36 @@ jobs:
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
 
+      - name: Update Pull Request
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+      
       - name: Terraform apply
         id: apply
         run: |
@@ -78,3 +107,9 @@ jobs:
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
+      
+      - name: Upload state file
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-state
+          path: path/to/artifact/world.txt
