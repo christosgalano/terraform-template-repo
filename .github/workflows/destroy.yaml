@@ -5,40 +5,37 @@ on:
   workflow_dispatch:
 
 jobs:
-  approve:
-    name: approve-infra-teardown
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-    steps:
-      - name: Manual Workflow Approval
-        uses: trstringer/manual-approval@v1.8.0
-        with:
-          secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: christosgalano
-          minimum-approvals: 1
-          issue-title: "Approve infrastructure teardown"
-          exclude-workflow-initiator-as-approver: false
+  # approve:
+  #   name: approve-infra-teardown
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     issues: write
+  #   steps:
+  #     - name: Manual Workflow Approval
+  #       uses: trstringer/manual-approval@v1.8.0
+  #       with:
+  #         secret: ${{ secrets.GITHUB_TOKEN }}
+  #         approvers: christosgalano
+  #         minimum-approvals: 1
+  #         issue-title: "Approve infrastructure teardown"
+  #         exclude-workflow-initiator-as-approver: false
   destroy:
     name: destroy
-    needs: approve
+    # needs: approve
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-    env:
-      WORKING_DIR: ${{ github.workspace }}/terraform # working directory where the Terraform files are located
     defaults:
       run:
         shell: bash
-        working-directory: ${{ env.WORKING_DIR }}
     steps:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Terraform destroy
-        run: |
-          terraform apply -destroy -no-color -auto-approve \
-            -var="client_id=${{ secrets.CLIENT_ID }}" \
-            -var="tenant_id=${{ secrets.TENANT_ID }}" \
-            -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
+        run: terraform destroy -auto-approve
+# terraform apply -destroy -no-color -auto-approve \
+# -var="client_id=${{ secrets.CLIENT_ID }}" \
+# -var="tenant_id=${{ secrets.TENANT_ID }}" \
+# -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
