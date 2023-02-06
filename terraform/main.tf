@@ -1,12 +1,13 @@
 locals {
   suffix = "${var.workload}-${var.environment}-${var.location_abbreviation}"
   default_tags = {
-    workload    = "${var.workload}"
-    environment = "${var.environment}"
+    workload    = var.workload
+    environment = var.environment
   }
 }
 
 locals {
+  # tflint-ignore: terraform_unused_declarations
   suffix_clean = replace(local.suffix, "-", "")
   rg_tags      = merge(var.rg_tags, local.default_tags)
 }

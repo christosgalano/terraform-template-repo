@@ -1,5 +1,5 @@
 resource "azurerm_role_assignment" "ra" {
-  scope                = var.scope
-  role_definition_name = var.role_definition_name
-  principal_id         = var.principal_id
+  scope              = var.scope
+  role_definition_id = var.role_definition_id
+  principal_id       = var.principal_id
 }
