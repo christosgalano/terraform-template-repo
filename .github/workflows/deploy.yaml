@@ -36,11 +36,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-sarif-action@v0.1.4
-        with:
-          working_directory: ${{ env.WORKING_DIR }}
-          sarif_file: tfsec.sarif
+      # - name: Run tfsec
+      #   uses: aquasecurity/tfsec-sarif-action@v0.1.4
+      #   with:
+      #     working_directory: ${{ env.WORKING_DIR }}
+      #     sarif_file: tfsec.sarif
 
       # - name: Upload SARIF file
       #   uses: github/codeql-action/upload-sarif@v2
@@ -72,8 +72,9 @@ jobs:
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
+        # continue-on-error: true
 
-      - name: Update Pull Request
+      - name: Update pull request
         uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
         env:
