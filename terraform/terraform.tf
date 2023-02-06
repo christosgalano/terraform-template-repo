@@ -2,9 +2,9 @@ terraform {
   required_version = ">= 1.3.0"
 
   cloud {
-    organization = var.organization
+    organization = "christosgalano"
     workspaces {
-      name = var.workspace
+      name = "terraform-library"
     }
   }
 

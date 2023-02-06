@@ -1,15 +1,3 @@
-variable "organization" {
-  type        = string
-  default     = "christosgalano"
-  description = "Terraform Cloud organization"
-}
-
-variable "workspace" {
-  type        = string
-  default     = "terraform-library"
-  description = "Terraform Cloud workspace"
-}
-
 variable "client_id" {
   type        = string
   sensitive   = true
