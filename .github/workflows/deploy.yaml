@@ -15,9 +15,12 @@ jobs:
     name: deploy
     runs-on: ubuntu-latest
 
-    # Set the default working directory to where the Terraform files are located
+    # Set the default:
+    # - shell to bash regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    # - working directory to where the Terraform files are located
     defaults:
       run:
+        shell: bash
         working-directory: ${{ github.workspace }}/terraform
 
     steps:
