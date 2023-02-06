@@ -35,4 +35,8 @@ jobs:
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Terraform destroy
-        run: terraform destroy
+        run: |
+          terraform apply -destroy -no-color -auto-approve \
+            -var="client_id=${{ secrets.CLIENT_ID }}" \
+            -var="tenant_id=${{ secrets.TENANT_ID }}" \
+            -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
