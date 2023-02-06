@@ -1,4 +1,4 @@
-# This workflow performs a pool of test on the Terraform code and then deploys it to Azure.
+# This workflow validates and then deploys our Terraform code.
 name: deploy
 run-name: ${{ github.workflow }}
 on:
@@ -36,11 +36,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # - name: Run tfsec
-      #   uses: aquasecurity/tfsec-sarif-action@v0.1.4
-      #   with:
-      #     working_directory: ${{ env.WORKING_DIR }}
-      #     sarif_file: tfsec.sarif
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-sarif-action@v0.1.4
+        with:
+          working_directory: ${{ env.WORKING_DIR }}
+          sarif_file: tfsec.sarif
 
       # - name: Upload SARIF file
       #   uses: github/codeql-action/upload-sarif@v2
