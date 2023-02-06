@@ -9,9 +9,7 @@ variable "location" {
 }
 
 variable "tags" {
-  type = map(string)
-  default = {
-    "key" = "value"
-  }
+  type        = map(string)
+  default     = {}
   description = "Tags to be applied on the resource group"
 }

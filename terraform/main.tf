@@ -1,18 +1,20 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "=3.14.0"
-    }
+locals {
+  suffix = "${var.workload}-${var.environment}-${var.location_abbreviation}"
+  default_tags = {
+    workload    = "${var.workload}"
+    environment = "${var.environment}"
   }
 }
 
-provider "azurerm" {
-  features {}
-}
-
 locals {
-  suffix       = replace(var.project_id, "-", "")
-  suffix_clean = replace(suffix, "-", "")
+  suffix_clean = replace(local.suffix, "-", "")
+  rg_tags      = merge(var.rg_tags, local.default_tags)
 }
 
+module "resource_group" {
+  source = "./modules/resource_group"
+
+  name     = "rg-${local.suffix}"
+  location = var.location
+  tags     = local.rg_tags
+}
