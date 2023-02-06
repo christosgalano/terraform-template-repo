@@ -1,7 +1,11 @@
 ### VS Code ###
 **/.vscode/*
 
+### JSON ###
+.markdownlint.json
+
 ### Terraform ###
+
 # Local .terraform directories
 **/.terraform/*
 
