@@ -1,5 +1,3 @@
-# Usage
-<!--- BEGIN_TF_DOCS --->
 ## Requirements
 
 No requirements.
@@ -25,5 +23,3 @@ No requirements.
 | id | ID of the resource group |
 | location | Location of the resource group |
 | name | Name of the resource group |
-
-<!--- END_TF_DOCS --->

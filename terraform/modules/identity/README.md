@@ -1,5 +1,3 @@
-# Usage
-<!--- BEGIN_TF_DOCS --->
 ## Requirements
 
 No requirements.
@@ -26,5 +24,3 @@ No requirements.
 | principal\_id | Service Principal ID associated with the user-assigned managed identity |
 | resource\_id | Resource ID associated with the user-assigned managed identity |
 | tenant\_id | Tenant ID associated with the user-assigned managed identity |
-
-<!--- END_TF_DOCS --->

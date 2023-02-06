@@ -1,5 +1,3 @@
-# Usage
-<!--- BEGIN_TF_DOCS --->
 ## Requirements
 
 No requirements.
@@ -21,5 +19,3 @@ No requirements.
 ## Outputs
 
 No output.
-
-<!--- END_TF_DOCS --->
