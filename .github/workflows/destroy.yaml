@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  approve-infra-teardown:
+  approve:
     name: approve-infra-teardown
     runs-on: ubuntu-latest
     permissions:
