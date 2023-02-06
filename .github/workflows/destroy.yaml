@@ -44,8 +44,10 @@ jobs:
 
       - name: Terraform destroy
         run: |
-          terraform plan -destroy -out=destroy.tfplan
-          terraform apply destroy.tfplan -auto-approve
+          terraform apply -destroy -no-color -auto-approve \
+            -var="client_id=${{ secrets.CLIENT_ID }}" \
+            -var="tenant_id=${{ secrets.TENANT_ID }}" \
+            -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
 
 # terraform apply -destroy -no-color -auto-approve \
 # -var="client_id=${{ secrets.CLIENT_ID }}" \
