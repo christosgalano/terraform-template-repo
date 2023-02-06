@@ -28,7 +28,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working_directory: ${{ github.workspace }}/terraform
+        working-directory: ${{ github.workspace }}/terraform
     steps:
       - name: Checkout
         uses: actions/checkout@v3
