@@ -37,11 +37,11 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Run tfsec
-        uses: aquasecurity/tfsec-sarif-action@v0.1.4
+        uses: aquasecurity/tfsec-sarif-action@v1.0.3
         with:
           working_directory: ${{ env.WORKING_DIR }}
           sarif_file: tfsec.sarif
-          additional_args: --tfvars-file
+          tfsec_args: --tfvars-file
 
       # - name: Upload SARIF file
       #   uses: github/codeql-action/upload-sarif@v2
