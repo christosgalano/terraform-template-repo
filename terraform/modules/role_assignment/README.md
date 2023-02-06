@@ -1,3 +1,4 @@
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 No requirements.
@@ -6,16 +7,27 @@ No requirements.
 
 | Name | Version |
 |------|---------|
-| azurerm | n/a |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [azurerm_role_assignment.ra](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| principal\_id | The principal ID assigned to the role | `string` | n/a | yes |
-| role\_definition\_id | The role definition ID used in the role assignment | `string` | n/a | yes |
-| scope | The scope at which the Role Assignment applies to | `string` | n/a | yes |
+| <a name="input_principal_id"></a> [principal\_id](#input\_principal\_id) | The principal ID assigned to the role | `string` | n/a | yes |
+| <a name="input_role_definition_id"></a> [role\_definition\_id](#input\_role\_definition\_id) | The role definition ID used in the role assignment | `string` | n/a | yes |
+| <a name="input_scope"></a> [scope](#input\_scope) | The scope at which the Role Assignment applies to | `string` | n/a | yes |
 
 ## Outputs
 
-No output.
+No outputs.
+<!-- END_TF_DOCS -->
