@@ -2,7 +2,6 @@
 name: deploy
 run-name: ${{ github.workflow }}
 on:
-  workflow_dispatch:
   # push:
   #   branches:
   #   - main
@@ -13,6 +12,7 @@ on:
   #   - main
   #   paths:
   #   - terraform/**
+  workflow_dispatch:
 
 permissions:
   actions: read
@@ -43,6 +43,7 @@ jobs:
           sarif_file: tfsec.sarif
           tfsec_args: --tfvars-file
 
+      # TODO: Uncomment when repo is public
       # - name: Upload SARIF file
       #   uses: github/codeql-action/upload-sarif@v2
       #   with:

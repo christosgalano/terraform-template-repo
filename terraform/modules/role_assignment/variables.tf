@@ -3,9 +3,9 @@ variable "scope" {
   description = "The scope at which the Role Assignment applies to"
 }
 
-variable "role_definition_id" {
+variable "role_definition_name" {
   type        = string
-  description = "The role definition ID used in the role assignment"
+  description = "The role definition name used in the role assignment"
 }
 
 variable "principal_id" {

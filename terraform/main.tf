@@ -24,3 +24,10 @@ module "identity" {
   location            = var.location
   resource_group_name = module.resource_group.name
 }
+
+module "role_assignment" {
+  source               = "./modules/role_assignment"
+  scope                = module.resource_group.id
+  role_definition_name = "Contributor"
+  principal_id         = module.identity.principal_id
+}
