@@ -24,7 +24,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_principal_id"></a> [principal\_id](#input\_principal\_id) | The principal ID assigned to the role | `string` | n/a | yes |
-| <a name="input_role_definition_id"></a> [role\_definition\_id](#input\_role\_definition\_id) | The role definition ID used in the role assignment | `string` | n/a | yes |
+| <a name="input_role_definition_name"></a> [role\_definition\_name](#input\_role\_definition\_name) | The role definition name used in the role assignment | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | The scope at which the Role Assignment applies to | `string` | n/a | yes |
 
 ## Outputs
