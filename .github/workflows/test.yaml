@@ -1,0 +1,44 @@
+name: test
+run-name: ${{ github.workflow }}
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - terraform/**
+
+env:
+  WORKING_DIR: ${{ github.workspace }}/terraform # working directory where the Terraform files are located
+
+jobs:
+  find-env:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            development:
+              - '${{ env.WORKING_DIR }}/environments/development/**'
+            staging:
+              - '${{ env.WORKING_DIR }}/environments/staging/**'
+            production:
+              - '${{ env.WORKING_DIR }}/environments/production/**'
+
+      - id: changed-env
+        run: |
+          changed_env=""
+          if [ "${{ steps.filter.outputs.development }}" == "true" ]; then
+            changed_env="development"
+          elif [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
+            changed_env="staging"
+          elif [ "${{ steps.filter.outputs.production }}" == "true" ]; then
+            changed_env="production"
+          else
+            echo "Error when selecting changed environment"
+            exit 1
+          fi
+
+          echo "Changed environment " $changed_env
