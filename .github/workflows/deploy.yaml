@@ -64,19 +64,22 @@ jobs:
 
       # Deployments to multiple environments simultaneously is not allowed.
       # The deployment priority is as follows:
-      # 1. Changes to production            files  ->  deploy to production
-      # 2. Changes to staging               files  ->  deploy to staging
-      # 3. Changes to development or module files  ->  deploy to development
+      # 1. Changes to module      files  ->  deploy to development to test it out
+      # 1. Changes to production  files  ->  deploy to production
+      # 2. Changes to staging     files  ->  deploy to staging
+      # 3. Changes to development files  ->  deploy to development
       - name: Select deployment environment
         if: github.event_name == 'push' || github.event_name == 'pull_request'
         id: select-environment
         run: |
           environment=""
-          if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
+          if [ "${{ steps.filter.outputs.modules }}" == "true" ]; then
+            environment="development"
+          elif [ "${{ steps.filter.outputs.production }}" == "true" ]; then
             environment="production"
           elif [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
             environment="staging"
-          elif [ "${{ steps.filter.outputs.development }}" == "true" ] || [ "${{ steps.filter.outputs.production }}" == "true" ]; then
+          elif [ "${{ steps.filter.outputs.development }}" == "true" ]; then
             environment="development"
           else
             echo "Error finding changes to terraform files"
