@@ -19,13 +19,14 @@ jobs:
       - uses: dorny/paths-filter@v2
         id: filter
         with:
+          working-directory: ${{ env.WORKING_DIR }}/environments
           filters: |
             development:
-              - '${{ env.WORKING_DIR }}/environments/development/**'
+              - 'development/**'
             staging:
-              - '${{ env.WORKING_DIR }}/environments/staging/**'
+              - 'staging/**'
             production:
-              - '${{ env.WORKING_DIR }}/environments/production/**'
+              - 'production/**'
 
       - id: changed-env
         run: |
