@@ -15,7 +15,7 @@ jobs:
     name: filter-environment
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.filter.outputs.development }}
+      environment: ${{ steps.select-environment.outputs.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -40,6 +40,7 @@ jobs:
       # 2. Changes to staging               files  ->  deploy to staging
       # 3. Changes to development or module files  ->  deploy to development
       - name: Select deployment environment
+        id: select-environment
         run: |
           environment=""
           if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
