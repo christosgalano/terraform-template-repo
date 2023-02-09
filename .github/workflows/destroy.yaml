@@ -9,7 +9,7 @@ on:
         required: true
         description: "Specify the environment to be destroyed"
 
-# Cancel in progress same-environment workflows.
+# Cancel in progress workflows which have the same environment.
 # The newly triggered workflow is going to fail by default because another deployment has the Terraform lock,
 # so we override this and always deploy the most recently triggered workflow.
 concurrency:

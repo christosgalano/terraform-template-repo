@@ -19,11 +19,11 @@ on:
         required: true
         description: "Specify the environment to deploy into"
 
-# Cancel in progress workflows regardless of the trigger.
+# Cancel in progress workflows which were triggered the same way.
 # The newly triggered workflow is going to fail by default because another deployment has the Terraform lock,
 # so we override this and always deploy the most recently triggered workflow.
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.event_name }}
   cancel-in-progress: true
 
 permissions:
