@@ -79,7 +79,7 @@ jobs:
           elif [ "${{ steps.filter.outputs.development }}" == "true" ] || [ "${{ steps.filter.outputs.production }}" == "true" ]; then
             environment="development"
           else
-            echo "Error finding changes"
+            echo "Error finding changes to terraform files"
             exit 1
           fi
           echo "Selected the $environment environment" 
