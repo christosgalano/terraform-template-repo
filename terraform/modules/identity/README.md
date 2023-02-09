@@ -32,8 +32,8 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_client_id"></a> [client\_id](#output\_client\_id) | Client ID associated with the user-assigned managed identity |
-| <a name="output_principal_id"></a> [principal\_id](#output\_principal\_id) | Service Principal ID associated with the user-assigned managed identity |
-| <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id) | Resource ID associated with the user-assigned managed identity |
-| <a name="output_tenant_id"></a> [tenant\_id](#output\_tenant\_id) | Tenant ID associated with the user-assigned managed identity |
+| <a name="output_client_id"></a> [client\_id](#output\_client\_id) | Client ID of the user-assigned managed identity |
+| <a name="output_principal_id"></a> [principal\_id](#output\_principal\_id) | Service Principal ID of the user-assigned managed identity |
+| <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id) | Resource ID of the user-assigned managed identity |
+| <a name="output_tenant_id"></a> [tenant\_id](#output\_tenant\_id) | Tenant ID of the user-assigned managed identity |
 <!-- END_TF_DOCS -->
