@@ -47,5 +47,5 @@ variable "location_abbreviation" {
 variable "rg_tags" {
   type        = map(string)
   default     = {}
-  description = "Tags to be applied on the resource groups"
+  description = "Tags to be applied on the resource groups "
 }
