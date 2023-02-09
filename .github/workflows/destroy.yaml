@@ -13,7 +13,7 @@ on:
 # The newly triggered workflow is going to fail by default because another deployment has the Terraform lock,
 # so we override this and always deploy the most recently triggered workflow.
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.environment }}
+  group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
   cancel-in-progress: true
 
 jobs:
