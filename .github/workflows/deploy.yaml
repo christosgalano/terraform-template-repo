@@ -14,6 +14,11 @@ on:
   #   - terraform/**
   workflow_dispatch:
 
+# Cancel in progress workflows on pull_requests
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+#   cancel-in-progress: true
+
 permissions:
   actions: read
   contents: read
