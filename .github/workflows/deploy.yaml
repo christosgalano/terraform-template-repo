@@ -41,7 +41,7 @@ jobs:
         with:
           working_directory: ${{ env.WORKING_DIR }}
           sarif_file: tfsec.sarif
-          tfsec_args: --tfvars-file
+          tfvars_file: values.auto.tfvars
 
       # TODO: Uncomment when repo is public
       # - name: Upload SARIF file
