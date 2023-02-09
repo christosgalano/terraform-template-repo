@@ -17,7 +17,7 @@ on:
       environment:
         type: environment
         required: true
-        description: "Specify the environment to deploy into"
+        description: "Specify the deployment's environment"
 
 # Cancel in progress workflows based on the following:
 # - if the trigger was push/pull_request
