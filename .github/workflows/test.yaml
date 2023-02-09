@@ -26,11 +26,11 @@ jobs:
             environments:
               - './**'
             development:
-              - 'development/**'
+              - '**/development/**'
             staging:
-              - 'staging/**'
+              - '**/staging/**'
             production:
-              - 'production/**'
+              - '**/production/**'
 
       - id: changed-env
         run: |
