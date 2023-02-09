@@ -13,12 +13,6 @@
 *.tfstate
 *.tfstate.*
 
-# .lock.hcl files
-# *.lock.hcl
-
-# .tflint.hcl files
-*.tflint.hcl
-
 # Crash log files
 crash.log
 
