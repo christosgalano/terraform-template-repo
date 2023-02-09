@@ -17,7 +17,7 @@ on:
       environment:
         type: environment
         required: true
-        description: "Specify the environment to deploy into"
+        description: "Specify the deployment's environment"
 
 # Cancel in progress workflows based on the following:
 # - if the trigger was push/pull_request
@@ -134,6 +134,7 @@ jobs:
         run: terraform fmt -check
 
       - name: Terraform init
+        id: init
         run: terraform init
 
       - name: Terraform validate
@@ -160,8 +161,16 @@ jobs:
           script: |
             const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`\n
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
+
+            </details>
+
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
 
             <details><summary>Show Plan</summary>
 
@@ -171,7 +180,7 @@ jobs:
 
             </details>
 
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
