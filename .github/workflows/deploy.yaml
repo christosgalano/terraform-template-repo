@@ -105,7 +105,7 @@ jobs:
         with:
           working_directory: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}
           sarif_file: tfsec.sarif
-          tfvars_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}.auto.tfvars
+          tfvars_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}/${{ env.ENVIRONMENT }}.auto.tfvars
 
       # TODO: Uncomment when repo is public
       # - name: Upload SARIF file
