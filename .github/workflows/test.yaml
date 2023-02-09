@@ -21,6 +21,10 @@ jobs:
         with:
           working-directory: ${{ env.WORKING_DIR }}/environments
           filters: |
+            terraform:
+              - '../**'
+            environments:
+              - './**'
             development:
               - 'development/**'
             staging:
