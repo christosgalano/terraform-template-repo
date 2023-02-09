@@ -12,21 +12,21 @@ locals {
 }
 
 module "resource_group" {
-  source   = "./modules/resource_group"
+  source   = "../../modules/resource_group"
   name     = "rg-${local.suffix}"
   location = var.location
   tags     = local.rg_tags
 }
 
 module "identity" {
-  source              = "./modules/identity"
+  source              = "../../modules/identity"
   name                = "id-${local.suffix}"
   location            = var.location
   resource_group_name = module.resource_group.name
 }
 
 module "role_assignment" {
-  source               = "./modules/role_assignment"
+  source               = "../../modules/role_assignment"
   scope                = module.resource_group.id
   role_definition_name = "Contributor"
   principal_id         = module.identity.principal_id
