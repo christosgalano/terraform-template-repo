@@ -19,15 +19,9 @@ on:
         required: true
         description: "Specify the environment to deploy into"
 
-# Cancel in progress workflows based on the following:
-# - if the trigger was push/pull_request
-# - if the trigger was workflow_dispatch and the environment is the same
-#
-# Simultaneous deployment is only allowed when its manually triggered and
-# targets different environments, otherwise the most recently trigger workflow
-# gets executed.
+# Cancel in progress workflows; simultaneous deployment not allowed.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}-${{ inputs.environment }}
+  group: ${{ github.workflow }}
   cancel-in-progress: true
 
 permissions:
