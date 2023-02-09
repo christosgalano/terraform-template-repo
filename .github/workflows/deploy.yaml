@@ -27,7 +27,7 @@ on:
 # targets different environments, otherwise the most recently trigger workflow
 # gets executed.
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.environment || github.ref || github.head_ref }}
+  group: ${{ github.workflow }}-${{ github.event_name || inputs.environment }}
   cancel-in-progress: true
 
 permissions:
