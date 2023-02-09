@@ -12,7 +12,7 @@ env:
 
 jobs:
   filter:
-    name: filter
+    name: filter-environment
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.filter.outputs.development }}
@@ -43,11 +43,11 @@ jobs:
         run: |
           environment=""
           if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
-            environments="production"
+            environment="production"
           elif [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
-            environments="staging"
+            environment="staging"
           elif [ "${{ steps.filter.outputs.development }}" == "true" ] || [ "${{ steps.filter.outputs.production }}" == "true" ]; then
-            environments="development"
+            environment="development"
           else
             echo "Error finding changes"
             exit 1
