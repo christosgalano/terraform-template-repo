@@ -16,6 +16,7 @@ on:
     inputs:
       environment:
         type: environment
+        required: true
         description: "Specify the environment to deploy into"
 
 # Cancel in progress workflows regardless of the trigger.

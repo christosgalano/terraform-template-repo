@@ -6,7 +6,15 @@ on:
     inputs:
       environment:
         type: environment
+        required: true
         description: "Specify the environment to be destroyed"
+
+# Cancel in progress same-environment workflows.
+# The newly triggered workflow is going to fail by default because another deployment has the Terraform lock,
+# so we override this and always deploy the most recently triggered workflow.
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.environment }}
+  cancel-in-progress: true
 
 jobs:
   approve:
