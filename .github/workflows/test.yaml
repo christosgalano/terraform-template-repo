@@ -53,7 +53,7 @@ jobs:
             echo "Error finding changes"
             exit 1
           fi
-
+          echo "Selected the $environment environment" 
           echo "environment=$environment" >> $GITHUB_OUTPUT
 
   deploy:
