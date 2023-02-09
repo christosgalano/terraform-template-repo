@@ -1,6 +1,6 @@
 variable "scope" {
   type        = string
-  description = "The scope at which the Role Assignment applies to"
+  description = "The scope at which the role assignment applies to"
 }
 
 variable "role_definition_name" {
