@@ -10,5 +10,5 @@ variable "role_definition_name" {
 
 variable "principal_id" {
   type        = string
-  description = "The principal ID assigned to the role "
+  description = "The principal ID assigned to the role"
 }
