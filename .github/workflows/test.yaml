@@ -8,7 +8,7 @@ on:
       - terraform/**
 
 env:
-  WORKING_DIR: ${{ github.workspace }}/terraform # working directory where the Terraform files are located
+  WORKING_DIR: ${{ github.workspace }}/terraform
 
 jobs:
   find-env:
