@@ -90,7 +90,14 @@ jobs:
       #   id: tfsec
       #   with:
       #     working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-      #     sarif_file: tfsec.sarif
+      #     sarif_file: ${{ matrix.module }}_tfsec.sarif
+
+      # TODO: uncomment when repo is public
+      # - name: Upload SARIF file
+      #   uses: github/codeql-action/upload-sarif@v2
+      #   with:
+      #     sarif_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ matrix.module }}_tfsec.sarif # path to SARIF file relative to the root of the repository
+      #     category: tfsec
 
       # - name: Setup Terraform
       #   uses: hashicorp/setup-terraform@v2
