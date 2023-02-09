@@ -121,7 +121,7 @@ jobs:
           sarif_file: tfsec.sarif
           tfvars_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}/${{ env.ENVIRONMENT }}.auto.tfvars
 
-      # TODO: Uncomment when repo is public
+      # TODO: uncomment when repo is public
       # - name: Upload SARIF file
       #   uses: github/codeql-action/upload-sarif@v2
       #   with:
