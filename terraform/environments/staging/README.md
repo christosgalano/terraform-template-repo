@@ -14,9 +14,9 @@ No providers.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_identity"></a> [identity](#module\_identity) | ./modules/identity | n/a |
-| <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group) | ./modules/resource_group | n/a |
-| <a name="module_role_assignment"></a> [role\_assignment](#module\_role\_assignment) | ./modules/role_assignment | n/a |
+| <a name="module_identity"></a> [identity](#module\_identity) | ../../modules/identity | n/a |
+| <a name="module_resource_group"></a> [resource\_group](#module\_resource\_group) | ../../modules/resource_group | n/a |
+| <a name="module_role_assignment"></a> [role\_assignment](#module\_role\_assignment) | ../../modules/role_assignment | n/a |
 
 ## Resources
 
