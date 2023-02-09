@@ -3,9 +3,9 @@ output "id" {
   description = "Resource ID of the virtual network"
 }
 
-output "subnet_ids" {
-  value = map({
-    for snet in azurerm_subnet.subnets : snet.name => snet.id
+output "subnets_ids" {
+  value = tomap({
+    azurerm_subnet.subnets.*.name = azurerm_subnet.subnets.*.id
   })
   description = "IDs of the subnets"
 }
