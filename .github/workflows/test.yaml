@@ -39,15 +39,14 @@ jobs:
       # 1. Changes to production            files  ->  deploy to production
       # 2. Changes to staging               files  ->  deploy to staging
       # 3. Changes to development or module files  ->  deploy to development
-      - name: Create matrix
-        id: create-matrix
+      - name: Select deployment environment
         run: |
           environment=""
           if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
             environments="production"
           elif [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
             environments="staging"
-          elif [ "${{ steps.filter.outputs.development }}" == "true" || "${{ steps.filter.outputs.production }}" == "true" ]; then
+          elif [ "${{ steps.filter.outputs.development }}" == "true" ] || [ "${{ steps.filter.outputs.production }}" == "true" ]; then
             environments="development"
           else
             echo "Error finding changes"
