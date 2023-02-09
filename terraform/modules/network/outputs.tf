@@ -5,7 +5,7 @@ output "id" {
 
 output "subnets_ids" {
   value = tomap({
-    "${azurerm_subnet.subnets.*.name}" = azurerm_subnet.subnets.*.id
+    for snet in azurerm_subnet.subnets : snet.name => snet.id
   })
   description = "IDs of the subnets"
 }
