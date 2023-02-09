@@ -29,7 +29,7 @@ variable "environment" {
   type        = string
   description = "Name of the workload's environment"
   validation {
-    condition     = length(var.workload) >= 2 && length(var.workload) <= 10
+    condition     = length(var.environment) >= 2 && length(var.environment) <= 10
     error_message = "Environment's length should be >= 2 and <= 10"
   }
 }
