@@ -6,7 +6,7 @@ resource "azurerm_virtual_network" "vnet" {
   tags                = var.tags
 }
 
-resource "azurerm_subnet" "subnet" {
+resource "azurerm_subnet" "subnets" {
   count                = length(var.subnets)
   name                 = var.subnets[count.index].name
   address_prefixes     = [var.subnets[count.index].address_prefix]
