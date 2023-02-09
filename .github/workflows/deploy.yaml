@@ -2,22 +2,26 @@
 name: deploy
 run-name: ${{ github.workflow }}
 on:
-  # push:
-  #   branches:
-  #   - main
-  #   paths:
-  #   - terraform/**
-  # pull_request:
-  #   branches:
-  #   - main
-  #   paths:
-  #   - terraform/**
+  push:
+    branches:
+      - main
+    paths:
+      - terraform/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - terraform/**
   workflow_dispatch:
+    inputs:
+      environment:
+        type: environment
+        description: "Specify the environment to deploy into"
 
 # Cancel in progress workflows on pull_requests
-# concurrency:
-#   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-#   cancel-in-progress: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 permissions:
   actions: read
@@ -27,16 +31,71 @@ permissions:
   pull-requests: write
 
 env:
-  WORKING_DIR: ${{ github.workspace }}/terraform # working directory where the Terraform files are located
+  TERRAFORM_ENV_DIR: ${{ github.workspace }}/terraform/environments
 
 jobs:
-  deploy:
-    name: deploy
+  select-environment:
+    name: select-environment
     runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.select-environment.outputs.environment | inputs.environment }}
     defaults:
       run:
         shell: bash
-        working-directory: ${{ env.WORKING_DIR }}
+    steps:
+      - name: Checkout
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        uses: actions/checkout@v3
+
+      - name: Find which environment/s changed
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            modules:
+              - '**/modules/**'
+            development:
+              - '**/development/**'
+            staging:
+              - '**/staging/**'
+            production:
+              - '**/production/**'
+
+      # Deployments to multiple environments simultaneously is not allowed.
+      # The deployment priority is as follows:
+      # 1. Changes to production            files  ->  deploy to production
+      # 2. Changes to staging               files  ->  deploy to staging
+      # 3. Changes to development or module files  ->  deploy to development
+      - name: Select deployment environment
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        id: select-environment
+        run: |
+          environment=""
+          if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
+            environment="production"
+          elif [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
+            environment="staging"
+          elif [ "${{ steps.filter.outputs.development }}" == "true" ] || [ "${{ steps.filter.outputs.production }}" == "true" ]; then
+            environment="development"
+          else
+            echo "Error finding changes"
+            exit 1
+          fi
+          echo "Selected the $environment environment" 
+          echo "environment=$environment" >> $GITHUB_OUTPUT
+
+  deploy:
+    name: deploy
+    needs: select-environment
+    runs-on: ubuntu-latest
+    environment: ${{ needs.select-environment.outputs.environment }}
+    env:
+      ENVIRONMENT: ${{ needs.select-environment.outputs.environment }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -44,15 +103,15 @@ jobs:
       - name: Run tfsec
         uses: aquasecurity/tfsec-sarif-action@v0.1.4
         with:
-          working_directory: ${{ env.WORKING_DIR }}
+          working_directory: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}
           sarif_file: tfsec.sarif
-          tfvars_file: ${{ env.WORKING_DIR }}/values.auto.tfvars
+          tfvars_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}.auto.tfvars
 
       # TODO: Uncomment when repo is public
       # - name: Upload SARIF file
       #   uses: github/codeql-action/upload-sarif@v2
       #   with:
-      #     sarif_file: ${{ env.WORKING_DIR }}/tfsec.sarif # path to SARIF file relative to the root of the repository
+      #     sarif_file: ${{ env.TERRAFORM_ENV_DIR }}/tfsec.sarif # path to SARIF file relative to the root of the repository
       #     category: tfsec
 
       - name: Setup Terraform
@@ -72,14 +131,14 @@ jobs:
         run: terraform validate -no-color
 
       - name: Terraform plan
-        # if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         id: plan
         run: |
           terraform plan \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
-        # continue-on-error: true
+        continue-on-error: true
 
       - name: Update pull request
         uses: actions/github-script@v6
@@ -116,7 +175,7 @@ jobs:
         run: exit 1
 
       - name: Terraform apply
-        # if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         id: apply
         run: |
           terraform apply -no-color -auto-approve \
