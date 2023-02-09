@@ -38,7 +38,7 @@ jobs:
     name: select-environment
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.select-environment.outputs.environment | inputs.environment }}
+      environment: ${{ steps.select-environment.outputs.environment || inputs.environment }}
     defaults:
       run:
         shell: bash
