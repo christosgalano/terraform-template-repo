@@ -1,0 +1,163 @@
+# This workflow validates changes made to one or modules.
+name: validate-modules
+run-name: ${{ github.workflow }}
+on:
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - terraform/modules/**
+  # pull_request:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - terraform/modules/**
+  workflow_dispatch:
+  repository_dispatch:
+
+# Cancel in progress workflows.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+env:
+  TERRAFORM_MODULES_DIR: ${{ github.workspace }}/terraform/modules
+
+jobs:
+  select-modules:
+    name: select-modules
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.select-changed-modules.outputs.changed-modules | steps.select-all-modules.outputs.all-modules }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        uses: actions/checkout@v3
+
+      - name: Find which module/s changed
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            identity:
+              - '**/modules/identity/**'
+            network:
+              - '**/modules/network/**'
+            resource_group:
+              - '**/modules/resource_group/**'
+            role_assignment:
+              - '**/modules/role_assignment/**'
+
+      - name: Select changed modules
+        if: github.event_name == 'push' || github.event_name == 'pull_request'
+        id: select-changed-modules
+
+        # TODO: create matrix from changed modules and set as output
+        run: |
+
+      - name: Select all modules
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'repository'
+        id: select-all-modules
+
+        # TODO: create matrix from all modules and set as output
+        run: |
+
+  validate-module:
+    name: validate-${{ matrix.module }}-module
+    needs: find-changed-modules
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5 # validate up to 5 modules in parallel
+      fail-fast: false # do not cancel any queued or running job if one job fails
+      matrix:
+        module: ${{ fromJson(needs.select-modules.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # TODO: create validate subfolder in each module and perhaps a test suite
+
+      # - name: Run tfsec
+      #   uses: aquasecurity/tfsec-sarif-action@v0.1.4
+      #   id: tfsec
+      #   with:
+      #     working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+      #     sarif_file: tfsec.sarif
+
+      # - name: Setup Terraform
+      #   uses: hashicorp/setup-terraform@v2
+      #   with:
+      #     cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      # - name: Terraform fmt
+      #   id: fmt
+      #   run: terraform fmt -check
+
+      # - name: Terraform init
+      #   id: init
+      #   run: terraform init ./validate
+
+      # - name: Terraform validate
+      #   id: validate
+      #   run: terraform validate -no-color ./validate
+
+      # - name: Terraform plan
+      #   if: github.event_name == 'pull_request'
+      #   id: plan
+      #   run: terraform plan ./validate
+      #   continue-on-error: true
+
+      # - name: Terraform test
+      #   id: test
+      #   run: terraform test ./validate
+
+      - uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tf_result = ${{ steps.tfsec.tfsec-return-code }} ? 'failure' : 'success'
+            const output = `#### tfsec scan result code ㊙️ `${tf_result}`
+            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`\n
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
+
+            </details>
+
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      # - name: Terraform plan status
+      #   if: steps.plan.outcome == 'failure'
+      #   run: exit 1

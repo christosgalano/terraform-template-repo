@@ -1,17 +1,17 @@
-# This workflow validates and then deploys our Terraform code.
+# This workflow validates our Terraform modules, selects our deployment's environment, and then deploys our Terraform code.
 name: deploy
 run-name: ${{ github.workflow }}
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - terraform/**
-  pull_request:
-    branches:
-      - main
-    paths:
-      - terraform/**
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - terraform/environments/**
+  # pull_request:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - terraform/environments/**
   workflow_dispatch:
     inputs:
       environment:
@@ -41,8 +41,12 @@ env:
   TERRAFORM_ENV_DIR: ${{ github.workspace }}/terraform/environments
 
 jobs:
+  validate-modules:
+    uses: ./.github/workflows/validate_modules.yaml@main
+
   select-environment:
     name: select-environment
+    needs: validate-modules
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.select-environment.outputs.environment || inputs.environment }}
@@ -159,7 +163,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            const tf_result = ${{ steps.tfsec.tfsec-return-code }} ? 'failure' : 'success'
+            const output = `#### tfsec scan result code ㊙️ `${tf_result}`
+            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
             <details><summary>Validation Output</summary>
@@ -194,7 +200,7 @@ jobs:
         run: exit 1
 
       - name: Terraform apply
-        if: github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
+        if: github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         id: apply
         run: |
           terraform apply -no-color -auto-approve \
