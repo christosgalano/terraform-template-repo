@@ -3,6 +3,10 @@ name: destroy
 run-name: ${{ github.workflow }}
 on:
   workflow_dispatch:
+    inputs:
+      environment:
+        type: environment
+        description: "Specify the environment to be destroyed"
 
 jobs:
   approve:
@@ -17,20 +21,21 @@ jobs:
           secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: christosgalano
           minimum-approvals: 1
-          issue-title: "Approve infrastructure teardown"
+          issue-title: "Approve infrastructure teardown for the ${{ inputs.environment }} environment"
           exclude-workflow-initiator-as-approver: false
 
   destroy:
     name: destroy
     needs: approve
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     permissions:
       id-token: write
       contents: read
     defaults:
       run:
         shell: bash
-        working-directory: ${{ github.workspace }}/terraform
+        working-directory: ${{ github.workspace }}/terraform/environments/${{ inputs.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
