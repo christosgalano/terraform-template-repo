@@ -4,7 +4,7 @@ terraform {
   cloud {
     organization = "christosgalano"
     workspaces {
-      name = "gh-terraform-library"
+      name = "gh-terraform-library-development"
     }
   }
 
