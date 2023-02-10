@@ -42,7 +42,7 @@ env:
 
 jobs:
   validate-modules:
-    uses: ./.github/workflows/validate_modules.yaml@main
+    uses: ./.github/workflows/validate_modules.yaml
 
   select-environment:
     name: select-environment
