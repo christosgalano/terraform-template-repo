@@ -27,7 +27,7 @@ jobs:
           working-dir: ${{ env.TERRAFORM_DIR }}/
           recursive: true
           recursive-path: modules
-          config-file: ".terraform-docs.yml"
+          config-file: ".terraform-docs.yaml"
           git-push: "true"
 
       - name: Generate Terraform environments documentation
@@ -36,5 +36,5 @@ jobs:
           working-dir: ${{ env.TERRAFORM_DIR }}/
           recursive: true
           recursive-path: environments
-          config-file: ".terraform-docs.yml"
+          config-file: ".terraform-docs.yaml"
           git-push: "true"
