@@ -1,27 +1,9 @@
 <!-- BEGIN_TF_DOCS -->
+## Requirements
 
-
-main.tf
-
-
-
-## Usage
-Basic usage of this module is as follows:
-```hcl
-module "example" {
-   source = "<module-path>"
-
-  # Required variables
-   address_space = 
-   location = 
-   name = 
-   resource_group_name = 
-   subnets = 
-
-   # Optional variables
-   tags = {}
-}
-```
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.3 |
 
 ## Providers
 
@@ -55,5 +37,4 @@ module "example" {
 |------|-------------|
 | <a name="output_id"></a> [id](#output\_id) | Resource ID of the virtual network |
 | <a name="output_subnets_ids"></a> [subnets\_ids](#output\_subnets\_ids) | IDs of the subnets |
-
 <!-- END_TF_DOCS -->
