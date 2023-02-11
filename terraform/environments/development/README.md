@@ -12,6 +12,12 @@
 |------|---------|
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 3.42 |
 
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_network"></a> [network](#module\_network) | ../../modules/network | n/a |
+
 ## Resources
 
 | Name | Type |
@@ -19,12 +25,6 @@
 | [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.contributor_ra](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_user_assigned_identity.identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
-
-## Modules
-
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_network"></a> [network](#module\_network) | ../../modules/network | n/a |
 
 ## Inputs
 
