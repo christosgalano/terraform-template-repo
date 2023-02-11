@@ -74,9 +74,11 @@ jobs:
           echo ""
           matrix="{\"module\":$modules_json}"
           echo "Matrix: $matrix"
-          echo ""
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
-          echo "fromJson: ${{ fromJson($matrix) }}"
+
+      - name: Validate
+        run: |
+          echo "fromJson: ${{ fromJson(steps.select-all-modules.outputs.matrix) }}"
 
   validate-module:
     name: validate-${{ matrix.module }}-module
