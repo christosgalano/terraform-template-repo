@@ -101,7 +101,7 @@ jobs:
 
   deploy:
     name: deploy
-    # needs: select-environment
+    needs: select-environment
     runs-on: ubuntu-latest
     environment: ${{ needs.select-environment.outputs.environment }}
     env:
