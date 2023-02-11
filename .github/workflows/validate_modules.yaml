@@ -68,7 +68,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call'
         id: select-all-modules
         run: |
-          modules=( $(ls ${{ env.TERRAFORM_MODULES_DIR }}) )
+          modules=( $(ls ${{ env.TERRAFORM_MODULES_DIR }}/) )
           modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
           matrix={\"module\":$modules_json}
           echo "Selected modules: $modules" 
