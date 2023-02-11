@@ -115,12 +115,14 @@ jobs:
         run: terraform fmt -check
 
       - name: Terraform init
+        working-directory: ./validate
         id: init
-        run: terraform init ./validate
+        run: terraform init
 
       - name: Terraform validate
+        working-directory: ./validate
         id: validate
-        run: terraform validate -no-color ./validate
+        run: terraform validate -no-color
 
       - uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
