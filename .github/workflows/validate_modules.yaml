@@ -82,7 +82,7 @@ jobs:
 
   validate-module:
     name: validate-${{ matrix.module }}-module
-    needs: find-changed-modules
+    needs: select-modules
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 5 # validate up to 5 modules in parallel
