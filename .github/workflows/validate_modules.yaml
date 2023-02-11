@@ -72,10 +72,12 @@ jobs:
           modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
           echo "Selected modules: $modules_json"
           echo "matrix={\"module\":$modules_json"} >> $GITHUB_OUTPUT
+          echo "modules=$modules_json" >> $GITHUB_OUTPUT
 
       - name: Validate
         run: |
           echo ${{ fromJson(steps.select-all-modules.outputs.matrix) }}
+          echo ${{ fromJson(steps.select-all-modules.outputs.modules) }}
 
   # validate-module:
   #   name: validate-${{ matrix.module }}-module
@@ -84,8 +86,8 @@ jobs:
   #   strategy:
   #     max-parallel: 5 # validate up to 5 modules in parallel
   #     fail-fast: false # do not cancel any queued or running job if one job fails
-  #     matrix:
-  #       module: ${{ fromJson(needs.select-modules.outputs.matrix) }}
+  #     matrix: ${{ fromJson(needs.select-modules.outputs.matrix) }}
+  #     # module: ${{ fromJson(needs.select-modules.outputs.matrix) }}
   #   defaults:
   #     run:
   #       shell: bash
