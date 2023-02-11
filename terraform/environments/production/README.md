@@ -1,4 +1,6 @@
 <!-- BEGIN_TF_DOCS -->
+.Config
+
 ## Requirements
 
 | Name | Version |
@@ -25,6 +27,12 @@ module "example" {
    rg_tags = {}
 }
 ```
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 3.42 |
 
 ## Resources
 

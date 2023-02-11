@@ -1,4 +1,6 @@
 <!-- BEGIN_TF_DOCS -->
+.Config
+
 ## Requirements
 
 No requirements.
@@ -10,6 +12,10 @@ module "example" {
    source = "<module-path>"
 }
 ```
+
+## Providers
+
+No providers.
 
 ## Resources
 
