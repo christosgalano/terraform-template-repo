@@ -10,18 +10,18 @@
 Basic usage of this module is as follows:
 ```hcl
 module "example" {
-	 source = "<module-path>"
+   source = "<module-path>"
 
-	 # Required variables
-	 client_id = 
-	 environment = 
-	 location = 
-	 location_abbreviation = 
-	 subscription_id = 
-	 tenant_id = 
-	 workload = 
+  # Required variables
+   client_id = 
+   environment = 
+   location = 
+   location_abbreviation = 
+   subscription_id = 
+   tenant_id = 
+   workload = 
 
-    # Optional variables
+   # Optional variables
    rg_tags = {}
 }
 ```
