@@ -4,31 +4,31 @@ version: ">= 0.13.0"
 
 content: |-
   {{ .Requirements }}
-  
+
   ## Usage
   Basic usage of this module is as follows:
   ```hcl
     module "example" {
-      {{"\t"}} source  = "<module-path>"
+      {{"\s\s"}} source  = "<module-path>"
   {{- if .Module.RequiredInputs }}
-      {{"\n\t"}} # Required variables
+      {{"\n\s\s"}} # Required variables
       {{- range .Module.RequiredInputs }}
-      {{"\t"}} {{ .Name }}  = {{ .GetValue }}
+      {{"\s\s"}} {{ .Name }}  = {{ .GetValue }}
       {{- end }}
       {{- end }}
   {{- if .Module.OptionalInputs }}
-      {{"\n\t"}} # Optional variables
+      {{"\n\s\s"}} # Optional variables
       {{- range .Module.OptionalInputs }}
-      {{"\t"}} {{ .Name }}  = {{ .GetValue | printf "%s" }}
+      {{"\s\s"}} {{ .Name }}  = {{ .GetValue | printf "%s" }}
       {{- end }}
       {{- end }}
     }
   ```
-  
+
   {{ .Resources }}
-  
+
   {{ .Inputs }}
-  
+
   {{ .Outputs }}
 
 output:
