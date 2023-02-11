@@ -3,8 +3,13 @@ formatter: "markdown table" # required
 version: ">= 0.13.0"
 
 content: |-
-  {{ .Config }}
+  {{ if eq .Config.ModuleRoot "validate.tf" }}
+  ## Usage
+  This file is used for validating the following modules.
 
+  {{ .Modules }}
+
+  {{ else }}
   {{ .Requirements }}
 
   ## Usage
@@ -31,9 +36,12 @@ content: |-
 
   {{ .Resources }}
 
+  {{ .Modules }}
+
   {{ .Inputs }}
 
   {{ .Outputs }}
+  {{ end }}
 
 output:
   file: "README.md"
