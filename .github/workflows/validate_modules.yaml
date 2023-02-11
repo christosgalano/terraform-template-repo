@@ -70,11 +70,13 @@ jobs:
         run: |
           modules=( $(ls ./) )
           modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
-          matrix="{\"module\":$modules_json}"
           echo "Selected modules: $modules_json"
           echo ""
-          echo "Encoded = ${{ fromJson(needs.select-modules.outputs.matrix) }}"
+          matrix="{\"module\":$modules_json}"
+          echo "Matrix: $matrix"
+          echo ""
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          echo "fromJson: ${{ fromJson(needs.select-modules.outputs.matrix) }}"
 
   validate-module:
     name: validate-${{ matrix.module }}-module
