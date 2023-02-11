@@ -4,43 +4,42 @@ version: ">= 0.13.0"
 
 content: |-
   {{ if eq .Config.ModuleRoot "validate.tf" }}
-  ## Usage
-  This file is used for validating the following modules.
+    ## Usage
+    This file is used for validating the following modules.
 
-  {{ .Modules }}
-
+    {{ .Modules }}
   {{ else }}
-  {{ .Requirements }}
+    {{ .Requirements }}
 
-  ## Usage
-  Basic usage of this module is as follows:
-  ```hcl
-    module "example" {
-      {{"  "}} source = "<module-path>"
-      {{- if .Module.RequiredInputs }}
-      {{"\n "}} # Required variables
-      {{- range .Module.RequiredInputs }}
-      {{"  "}} {{ .Name }} = {{ .GetValue }}
-      {{- end }}
-      {{- end }}
-      {{- if .Module.OptionalInputs }}
-      {{"\n "}}  # Optional variables
-      {{- range .Module.OptionalInputs }}
-      {{"  "}} {{ .Name }} = {{ .GetValue | printf "%s" }}
-      {{- end }}
-      {{- end }}
-    }
-  ```
+    ## Usage
+    Basic usage of this module is as follows:
+    ```hcl
+      module "example" {
+        {{"  "}} source = "<module-path>"
+        {{- if .Module.RequiredInputs }}
+        {{"\n "}} # Required variables
+        {{- range .Module.RequiredInputs }}
+        {{"  "}} {{ .Name }} = {{ .GetValue }}
+        {{- end }}
+        {{- end }}
+        {{- if .Module.OptionalInputs }}
+        {{"\n "}}  # Optional variables
+        {{- range .Module.OptionalInputs }}
+        {{"  "}} {{ .Name }} = {{ .GetValue | printf "%s" }}
+        {{- end }}
+        {{- end }}
+      }
+    ```
 
-  {{ .Providers }}
+    {{ .Providers }}
 
-  {{ .Resources }}
+    {{ .Resources }}
 
-  {{ .Modules }}
+    {{ .Modules }}
 
-  {{ .Inputs }}
+    {{ .Inputs }}
 
-  {{ .Outputs }}
+    {{ .Outputs }}
   {{ end }}
 
 output:
