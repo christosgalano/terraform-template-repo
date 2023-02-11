@@ -1,4 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
+/github/workspace/terraform/environments/staging
 
 ## Requirements
 
