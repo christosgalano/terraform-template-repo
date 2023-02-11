@@ -32,10 +32,8 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}
     steps:
       - name: Checkout
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
         uses: actions/checkout@v3
 
       - name: Find which module/s changed
@@ -68,8 +66,9 @@ jobs:
       - name: Select all modules
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call'
         id: select-all-modules
+        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}
         run: |
-          modules=( $(ls .) )
+          modules=( $(ls ./) )
           modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
           matrix={\"module\":$modules_json}
           echo "Selected modules: $modules" 
