@@ -41,7 +41,5 @@
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_subnets_ids"></a> [subnets\_ids](#output\_subnets\_ids) | IDs of the subnets |
+No outputs.
 <!-- END_TF_DOCS -->
