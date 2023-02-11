@@ -6,17 +6,25 @@
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.3 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.42 |
 
-## Providers
+## Usage
+Basic usage of this module is as follows:
+```hcl
+module "example" {
+	 source  = "<module-path>"
 
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 3.42 |
+	 # Required variables
+	 client_id  = 
+	 environment  = 
+	 location  = 
+	 location_abbreviation  = 
+	 subscription_id  = 
+	 tenant_id  = 
+	 workload  = 
 
-## Modules
-
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_network"></a> [network](#module\_network) | ../../modules/network | n/a |
+	 # Optional variables
+	 rg_tags  = {}
+}
+```
 
 ## Resources
 

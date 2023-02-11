@@ -3,15 +3,23 @@
 
 No requirements.
 
-## Providers
+## Usage
+Basic usage of this module is as follows:
+```hcl
+module "example" {
+	 source  = "<module-path>"
 
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
+	 # Required variables
+	 address_space  = 
+	 location  = 
+	 name  = 
+	 resource_group_name  = 
+	 subnets  = 
 
-## Modules
-
-No modules.
+	 # Optional variables
+	 tags  = {}
+}
+```
 
 ## Resources
 
