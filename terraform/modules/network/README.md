@@ -1,4 +1,6 @@
 <!-- BEGIN_TF_DOCS -->
+.Config
+
 ## Requirements
 
 No requirements.
@@ -20,6 +22,12 @@ module "example" {
    tags = {}
 }
 ```
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
 
 ## Resources
 
