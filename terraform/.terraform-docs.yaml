@@ -2,48 +2,40 @@ formatter: "markdown table" # required
 
 version: ">= 0.13.0"
 
+# Include usage example
+# content: |-
+#   ## Usage
+#   Basic usage of this module is as follows:
+#   ```hcl
+#   module "example" {
+#     {{"  "}} source = "<module-path>"
+#     {{- if .Module.RequiredInputs }}
+#     {{"\n "}} # Required variables
+#     {{- range .Module.RequiredInputs }}
+#     {{"  "}} {{ .Name }} = {{ .GetValue }}
+#     {{- end }}
+#     {{- end }}
+#     {{- if .Module.OptionalInputs }}
+#     {{"\n "}}  # Optional variables
+#     {{- range .Module.OptionalInputs }}
+#     {{"  "}} {{ .Name }} = {{ .GetValue | printf "%s" }}
+#     {{- end }}
+#     {{- end }}
+#   }
+#   ```
+
 content: |-
-  {{ if eq .Module.Header "validate.tf" }}
-    ## Usage
-    This file is used for validating the following modules: {{.Config.ModuleRoot}}
+  {{ .Requirements }}
 
-    {{ .Modules }}
-  {{ else }}
-    {{ .Module.Header }}
-    {{ .Config.HeaderFrom }}
-    {{ .Header }}
-    {{ .Requirements }}
+  {{ .Providers }}
 
-    ## Usage
-    Basic usage of this module is as follows:
-    ```hcl
-      module "example" {
-        {{"  "}} source = "<module-path>"
-        {{- if .Module.RequiredInputs }}
-        {{"\n "}} # Required variables
-        {{- range .Module.RequiredInputs }}
-        {{"  "}} {{ .Name }} = {{ .GetValue }}
-        {{- end }}
-        {{- end }}
-        {{- if .Module.OptionalInputs }}
-        {{"\n "}}  # Optional variables
-        {{- range .Module.OptionalInputs }}
-        {{"  "}} {{ .Name }} = {{ .GetValue | printf "%s" }}
-        {{- end }}
-        {{- end }}
-      }
-    ```
+  {{ .Resources }}
 
-    {{ .Providers }}
+  {{ .Modules }}
 
-    {{ .Resources }}
+  {{ .Inputs }}
 
-    {{ .Modules }}
-
-    {{ .Inputs }}
-
-    {{ .Outputs }}
-  {{ end }}
+  {{ .Outputs }}
 
 output:
   file: "README.md"

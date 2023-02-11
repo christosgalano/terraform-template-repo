@@ -1,3 +1,7 @@
+terraform {
+  required_version = "~> 1.3"
+}
+
 resource "azurerm_virtual_network" "vnet" {
   name                = var.name
   location            = var.location
