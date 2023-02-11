@@ -3,7 +3,7 @@ formatter: "markdown table" # required
 version: ">= 0.13.0"
 
 content: |-
-  .Config
+  {{ .Config }}
 
   {{ .Requirements }}
 
