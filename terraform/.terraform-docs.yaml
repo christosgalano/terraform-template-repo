@@ -11,7 +11,7 @@ content: |-
   {{ else }}
     {{ .Module.Header }}
     {{ .Config.HeaderFrom }}
-    {{ .HeaderFrom }}
+    {{ .Header }}
     {{ .Requirements }}
 
     ## Usage
