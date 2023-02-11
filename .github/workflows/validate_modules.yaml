@@ -60,7 +60,7 @@ jobs:
           fi
           modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
           matrix={\"module\":$modules_json}
-          echo "Selected modules: $modules_json" 
+          echo "Selected modules: ${modules[@]}" 
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
       - name: Select all modules
@@ -71,84 +71,84 @@ jobs:
           modules=( $(ls ./) )
           modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
           matrix={\"module\":$modules_json}
-          echo "Selected modules: $modules" 
+          echo "Selected modules: ${modules[@]}" 
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
-  # validate-module:
-  #   name: validate-${{ matrix.module }}-module
-  #   needs: select-modules
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     max-parallel: 5 # validate up to 5 modules in parallel
-  #     fail-fast: false # do not cancel any queued or running job if one job fails
-  #     matrix:
-  #       module: ${{ fromJson(needs.select-modules.outputs.matrix) }}
-  #   defaults:
-  #     run:
-  #       shell: bash
-  #       working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+  validate-module:
+    name: validate-${{ matrix.module }}-module
+    needs: select-modules
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5 # validate up to 5 modules in parallel
+      fail-fast: false # do not cancel any queued or running job if one job fails
+      matrix:
+        module: ${{ fromJson(needs.select-modules.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  #     - name: Run tfsec
-  #       uses: aquasecurity/tfsec-sarif-action@v0.1.4
-  #       id: tfsec
-  #       with:
-  #         working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-  #         sarif_file: ${{ matrix.module }}_tfsec.sarif
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-sarif-action@v0.1.4
+        id: tfsec
+        with:
+          working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+          sarif_file: ${{ matrix.module }}_tfsec.sarif
 
-  #     # TODO: uncomment when repo is public
-  #     # - name: Upload SARIF file
-  #     #   uses: github/codeql-action/upload-sarif@v2
-  #     #   with:
-  #     #     sarif_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ matrix.module }}_tfsec.sarif # path to SARIF file relative to the root of the repository
-  #     #     category: tfsec
+      # TODO: uncomment when repo is public
+      # - name: Upload SARIF file
+      #   uses: github/codeql-action/upload-sarif@v2
+      #   with:
+      #     sarif_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ matrix.module }}_tfsec.sarif # path to SARIF file relative to the root of the repository
+      #     category: tfsec
 
-  #     # TODO: perhaps add checkov action for terraform
+      # TODO: perhaps add checkov action for terraform
 
-  #     - name: Setup Terraform
-  #       uses: hashicorp/setup-terraform@v2
-  #       with:
-  #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-  #     - name: Terraform fmt
-  #       id: fmt
-  #       run: terraform fmt -check
+      - name: Terraform fmt
+        id: fmt
+        run: terraform fmt -check
 
-  #     - name: Terraform init
-  #       id: init
-  #       run: terraform init ./validate
+      - name: Terraform init
+        id: init
+        run: terraform init ./validate
 
-  #     - name: Terraform validate
-  #       id: validate
-  #       run: terraform validate -no-color ./validate
+      - name: Terraform validate
+        id: validate
+        run: terraform validate -no-color ./validate
 
-  #     - uses: actions/github-script@v6
-  #       if: github.event_name == 'pull_request'
-  #       env:
-  #         PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
-  #       with:
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         script: |
-  #           const tf_result = ${{ steps.tfsec.tfsec-return-code }} ? 'failure' : 'success'
-  #           const output = `#### tfsec scan result code ㊙️ `${tf_result}`
-  #           #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-  #           #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-  #           #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-  #           <details><summary>Validation Output</summary>
+      - uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tf_result = ${{ steps.tfsec.tfsec-return-code }} ? 'failure' : 'success'
+            const output = `#### tfsec scan result code ㊙️ `${tf_result}`
+            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
 
-  #           \`\`\`\n
-  #           ${{ steps.validate.outputs.stdout }}
-  #           \`\`\`
+            \`\`\`\n
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
 
-  #           </details>
+            </details>
 
-  #           *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
-  #           github.rest.issues.createComment({
-  #             issue_number: context.issue.number,
-  #             owner: context.repo.owner,
-  #             repo: context.repo.repo,
-  #             body: output
-  #           })
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
