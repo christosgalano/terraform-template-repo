@@ -3,10 +3,10 @@ formatter: "markdown table" # required
 version: ">= 0.13.0"
 
 content: |-
-  {{if eq .Module.Name "validate.tf"}}
-    .Module.Name
+  {{if eq .Name "validate.tf"}}
+    .Name
   {{ end }}
-  .Module.Name
+  .Name
 
   {{ .Requirements }}
 
@@ -29,6 +29,8 @@ content: |-
       {{- end }}
     }
   ```
+
+  {{ .Providers }}
 
   {{ .Resources }}
 
