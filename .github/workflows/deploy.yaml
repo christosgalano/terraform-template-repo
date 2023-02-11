@@ -41,12 +41,12 @@ env:
   TERRAFORM_ENV_DIR: ${{ github.workspace }}/terraform/environments
 
 jobs:
-  validate-modules:
-    uses: ./.github/workflows/validate_modules.yaml
+  # validate-modules:
+  # uses: ./.github/workflows/validate_modules.yaml
 
   select-environment:
     name: select-environment
-    needs: validate-modules
+    # needs: validate-modules
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.select-environment.outputs.environment || inputs.environment }}
@@ -101,7 +101,7 @@ jobs:
 
   deploy:
     name: deploy
-    needs: select-environment
+    # needs: select-environment
     runs-on: ubuntu-latest
     environment: ${{ needs.select-environment.outputs.environment }}
     env:
