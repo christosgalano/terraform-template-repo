@@ -8,6 +8,9 @@ on:
       - terraform/**
   workflow_dispatch:
 
+env:
+  TERRAFORM_DIR: ${{ github.workspace }}/terraform
+
 jobs:
   generate-terraform-docs:
     name: generate-terraform-docs
@@ -18,10 +21,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Generate Terraform documentation
+      - name: Generate Terraform modules documentation
         uses: terraform-docs/gh-actions@v1.0.0
         with:
-          find-dir: ${{ github.workspace }}/terraform
-          output-file: README.md
-          output-method: replace
+          working-dir: ${{ env.TERRAFORM_DIR }}/
+          recursive: true
+          recursive-path: modules
+          config-file: ".terraform-docs.yml"
+          git-push: "true"
+
+      - name: Generate Terraform environments documentation
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          working-dir: ${{ env.TERRAFORM_DIR }}/
+          recursive: true
+          recursive-path: environments
+          config-file: ".terraform-docs.yml"
           git-push: "true"

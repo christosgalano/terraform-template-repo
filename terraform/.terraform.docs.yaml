@@ -1,0 +1,34 @@
+formatter: "markdown table" # this is required
+
+version: ">= 0.13.0"
+
+# recursive:
+#   enabled: true
+#   path: modules
+
+output:
+  file: "README.md"
+  mode: replace
+  template: |-
+    <!-- BEGIN_TF_DOCS -->
+    {{ .Content }}
+    <!-- END_TF_DOCS -->
+
+sort:
+  enabled: true
+  by: required
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: true
+  escape: true
+  hide-empty: false
+  html: false
+  indent: 2
+  lockfile: true
+  read-comments: true
+  required: true
+  sensitive: true
+  type: true
