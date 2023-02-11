@@ -29,9 +29,9 @@ content: |-
 
   {{ .Providers }}
 
-  {{ .Resources }}
-
   {{ .Modules }}
+
+  {{ .Resources }}
 
   {{ .Inputs }}
 
