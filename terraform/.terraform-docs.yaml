@@ -3,6 +3,7 @@ formatter: "markdown table" # required
 version: ">= 0.13.0"
 
 content: |-
+  {{.Config.ModuleRoot}}
   {{ if eq .Config.ModuleRoot "validate.tf" }}
     ## Usage
     This file is used for validating the following modules.
