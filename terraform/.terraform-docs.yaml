@@ -9,15 +9,15 @@ content: |-
   Basic usage of this module is as follows:
   ```hcl
     module "example" {
-      {{"\t"}} source = "<module-path>"
+      {{"  "}} source = "<module-path>"
       {{- if .Module.RequiredInputs }}
-      {{"\n\t"}} # Required variables
+      {{"\n "}} # Required variables
       {{- range .Module.RequiredInputs }}
-      {{"\t"}} {{ .Name }} = {{ .GetValue }}
+      {{"  "}} {{ .Name }} = {{ .GetValue }}
       {{- end }}
       {{- end }}
       {{- if .Module.OptionalInputs }}
-      {{"\n  "}}  # Optional variables
+      {{"\n "}}  # Optional variables
       {{- range .Module.OptionalInputs }}
       {{"  "}} {{ .Name }} = {{ .GetValue | printf "%s" }}
       {{- end }}
