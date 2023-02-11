@@ -16,8 +16,8 @@ module "example" {
 	 resource_group_name  = 
 	 subnets  = 
 
-	 # Optional variables
-	 tags  = {}
+  # Optional variables
+tags  = {}
 }
 ```
 
