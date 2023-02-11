@@ -10,6 +10,8 @@ content: |-
     {{ .Modules }}
   {{ else }}
     {{ .Module.Header }}
+    {{ .Config.HeaderFrom }}
+    {{ .HeaderFrom }}
     {{ .Requirements }}
 
     ## Usage
