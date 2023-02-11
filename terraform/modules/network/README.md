@@ -7,17 +7,17 @@ No requirements.
 Basic usage of this module is as follows:
 ```hcl
 module "example" {
-	 source  = "<module-path>"
+	 source = "<module-path>"
 
 	 # Required variables
-	 address_space  = 
-	 location  = 
-	 name  = 
-	 resource_group_name  = 
-	 subnets  = 
+	 address_space = 
+	 location = 
+	 name = 
+	 resource_group_name = 
+	 subnets = 
 
-  # Optional variables
-tags  = {}
+	  # Optional variables
+	 tags = {}
 }
 ```
 
