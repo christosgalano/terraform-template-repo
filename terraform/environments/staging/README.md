@@ -60,9 +60,7 @@ module "example" {
 | <a name="input_workload"></a> [workload](#input\_workload) | Name of the workload that will be deployed | `string` | n/a | yes |
 | <a name="input_rg_tags"></a> [rg\_tags](#input\_rg\_tags) | Tags to be applied on the resource groups | `map(string)` | `{}` | no |
 
-## Outputs
 
-No outputs.
 
 <!-- END_TF_DOCS --> false <!-- BEGIN_TF_DOCS --> <!-- END_TF_DOCS -->} {false } {true required} {true true true true true false false 2 true true true true true} /github/workspace/terraform/environments/staging}
 

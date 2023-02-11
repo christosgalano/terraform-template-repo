@@ -1,8 +1,6 @@
 <!-- BEGIN_TF_DOCS -->
 
-## Requirements
 
-No requirements.
 
 ## Usage
 Basic usage of this module is as follows:
@@ -35,9 +33,7 @@ module "example" {
 | [azurerm_subnet.subnets](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
 | [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) | resource |
 
-## Modules
 
-No modules.
 
 ## Inputs
 
