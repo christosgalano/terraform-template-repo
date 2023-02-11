@@ -23,11 +23,8 @@ variable "address_space" {
 }
 
 variable "subnets" {
-  type = list(object({
-    name           = string
-    address_prefix = string
-  }))
-  description = "Subnets that the virtual network will contain"
+  type        = map(string)
+  description = "Subnets that the virtual network will contain, format: 'subnet_name' = 'subnet_address_prefix'"
   validation {
     condition     = length(var.subnets) >= 1
     error_message = "Virtual network must contain at least one subnet."

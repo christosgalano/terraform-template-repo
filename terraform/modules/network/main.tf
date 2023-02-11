@@ -7,9 +7,9 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "subnets" {
-  count                = length(var.subnets)
-  name                 = var.subnets[count.index].name
-  address_prefixes     = [var.subnets[count.index].address_prefix]
+  for_each             = var.subnets
+  name                 = each.key
+  address_prefixes     = [each.value]
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.vnet.name
 }

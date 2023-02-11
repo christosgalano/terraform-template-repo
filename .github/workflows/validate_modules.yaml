@@ -99,6 +99,8 @@ jobs:
       #     sarif_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ matrix.module }}_tfsec.sarif # path to SARIF file relative to the root of the repository
       #     category: tfsec
 
+      # TODO: perhaps add checkov action for terraform
+
       # - name: Setup Terraform
       #   uses: hashicorp/setup-terraform@v2
       #   with:

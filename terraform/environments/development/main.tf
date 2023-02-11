@@ -38,14 +38,8 @@ module "network" {
   location            = var.location
   resource_group_name = module.resource_group.name
   address_space       = ["10.0.0.0/24"]
-  subnets = [
-    {
-      name           = "snet-${local.suffix}-01",
-      address_prefix = "10.0.0.0/25"
-    },
-    {
-      name           = "snet-${local.suffix}-02",
-      address_prefix = "10.0.0.128/25"
-    }
-  ]
+  subnets = {
+    "snet-${local.suffix}-01" = "10.0.0.0/25",
+    "snet-${local.suffix}-02" = "10.0.0.128/25"
+  }
 }

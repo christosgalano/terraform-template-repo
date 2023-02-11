@@ -4,8 +4,8 @@ output "id" {
 }
 
 output "subnets_ids" {
-  value = tomap({
-    for snet in azurerm_subnet.subnets : snet.name => snet.id
-  })
+  value = {
+    for k, v in azurerm_subnet.subnets : k.name => k.id
+  }
   description = "IDs of the subnets"
 }
