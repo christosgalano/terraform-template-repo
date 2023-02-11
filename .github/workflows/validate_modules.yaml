@@ -28,7 +28,7 @@ jobs:
     name: select-modules
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.select-changed-modules.outputs.matrix | steps.select-all-modules.outputs.matrix }}
+      matrix: ${{ steps.select-changed-modules.outputs.matrix || steps.select-all-modules.outputs.matrix }}
     defaults:
       run:
         shell: bash
@@ -96,6 +96,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Run tfsec
         uses: aquasecurity/tfsec-sarif-action@v0.1.4
         id: tfsec
