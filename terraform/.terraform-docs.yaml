@@ -2,9 +2,34 @@ formatter: "markdown table" # this is required
 
 version: ">= 0.13.0"
 
-# recursive:
-#   enabled: true
-#   path: modules
+content: |-
+  {{ .Requirements }}
+  
+  ## Usage
+  Basic usage of this module is as follows:
+  ```hcl
+    module "example" {
+      {{"\t"}} source  = "<module-path>"
+  {{- if .Module.RequiredInputs }}
+      {{"\n\t"}} # Required variables
+      {{- range .Module.RequiredInputs }}
+      {{"\t"}} {{ .Name }}  = {{ .GetValue }}
+      {{- end }}
+      {{- end }}
+  {{- if .Module.OptionalInputs }}
+      {{"\n\t"}} # Optional variables
+      {{- range .Module.OptionalInputs }}
+      {{"\t"}} {{ .Name }}  = {{ .GetValue | printf "%s" }}
+      {{- end }}
+      {{- end }}
+    }
+  ```
+  
+  {{ .Resources }}
+  
+  {{ .Inputs }}
+  
+  {{ .Outputs }}
 
 output:
   file: "README.md"

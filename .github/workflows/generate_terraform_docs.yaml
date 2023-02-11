@@ -21,20 +21,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Generate Terraform modules documentation
+      - name: Generate Terraform documentation
         uses: terraform-docs/gh-actions@v1.0.0
         with:
-          working-dir: ${{ env.TERRAFORM_DIR }}/
-          recursive: true
-          recursive-path: modules
-          config-file: ".terraform-docs.yaml"
-          git-push: "true"
-
-      - name: Generate Terraform environments documentation
-        uses: terraform-docs/gh-actions@v1.0.0
-        with:
-          working-dir: ${{ env.TERRAFORM_DIR }}/
-          recursive: true
-          recursive-path: environments
+          find-dir: ${{ env.TERRAFORM_DIR }}/
           config-file: ".terraform-docs.yaml"
           git-push: "true"
