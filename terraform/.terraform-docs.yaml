@@ -10,16 +10,16 @@ content: |-
   ```hcl
     module "example" {
       {{"\t"}} source = "<module-path>"
-  {{- if .Module.RequiredInputs }}
+      {{- if .Module.RequiredInputs }}
       {{"\n\t"}} # Required variables
       {{- range .Module.RequiredInputs }}
       {{"\t"}} {{ .Name }} = {{ .GetValue }}
       {{- end }}
       {{- end }}
-  {{- if .Module.OptionalInputs }}
-      {{"\n\t"}}  # Optional variables
+      {{- if .Module.OptionalInputs }}
+      {{"\n  "}}  # Optional variables
       {{- range .Module.OptionalInputs }}
-      {{"\t"}} {{ .Name }} = {{ .GetValue | printf "%s" }}
+      {{"  "}} {{ .Name }} = {{ .GetValue | printf "%s" }}
       {{- end }}
       {{- end }}
     }
