@@ -9,6 +9,7 @@ content: |-
 
     {{ .Modules }}
   {{ else }}
+    {{ .Module.Header }}
     {{ .Requirements }}
 
     ## Usage
