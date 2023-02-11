@@ -21,8 +21,8 @@ module "example" {
 	 tenant_id = 
 	 workload = 
 
-	  # Optional variables
-	 rg_tags = {}
+    # Optional variables
+   rg_tags = {}
 }
 ```
 
