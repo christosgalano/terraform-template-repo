@@ -59,7 +59,7 @@ jobs:
             modules+=("private_keyvault")
           fi
           modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
-          matrix="{\"module\":$modules_json}"
+          matrix="{modules_json}"
           echo "Selected modules: $modules_json" 
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
@@ -71,14 +71,8 @@ jobs:
           modules=( $(ls ./) )
           modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
           echo "Selected modules: $modules_json"
-          echo ""
-          matrix="{\"module\":$modules_json}"
-          echo "Matrix: $matrix"
+          matrix="{$modules_json}"
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
-
-      - name: Validate
-        run: |
-          echo "fromJson: ${{ fromJson(steps.select-all-modules.outputs.matrix) }}"
 
   validate-module:
     name: validate-${{ matrix.module }}-module
