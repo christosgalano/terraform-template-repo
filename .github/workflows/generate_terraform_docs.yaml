@@ -26,4 +26,5 @@ jobs:
         with:
           find-dir: ${{ env.TERRAFORM_DIR }}/
           args: "--config /github/workspace/terraform/.terraform-docs.yaml"
+          output-method: replace
           git-push: "true"
