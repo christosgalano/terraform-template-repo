@@ -141,7 +141,7 @@ jobs:
           soft_fail: false
           framework: terraform
           output_format: sarif
-          output_file_path: ${{ env.REPORTS_DIR }}/${{ matrix.module }}_checkov.sarif
+          output_file_path: ${{ env.REPORTS_DIR }}/${{ matrix.module }}_checkov
           download_external_modules: true
         continue-on-error: true
 
@@ -179,19 +179,13 @@ jobs:
               body: output
             })
 
-      - name: Test sarifs
-        run: |
-          ls ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-          ls ${{ env.TERRAFORM_MODULES_DIR }}
-          ls ${{ env.REPORTS_DIR }}
-
       - name: Upload reports as artifact
         uses: actions/upload-artifact@v3
         if: success() || failure()
         with:
           name: ${{ matrix.module }}_scan_results
           path: ${{ env.REPORTS_DIR }}
-          retention-days: 10
+          retention-days: 5
 
       - name: Check tfsec status
         if: steps.tfsec.tfsec-return-code

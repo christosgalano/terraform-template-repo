@@ -18,6 +18,11 @@ on:
         type: environment
         required: true
         description: "Specify the deployment's environment"
+      tf_apply:
+        type: boolean
+        default: true
+        required: true
+        description: "Specify whether `terraform apply` will be run"
 
 # Cancel in progress workflows based on the following:
 # - if the trigger was push/pull_request
@@ -41,12 +46,12 @@ env:
   TERRAFORM_ENV_DIR: ${{ github.workspace }}/terraform/environments
 
 jobs:
-  # validate-modules:
-  # uses: ./.github/workflows/validate_modules.yaml
+  validate-modules:
+    uses: ./.github/workflows/validate_modules.yaml
 
   select-environment:
     name: select-environment
-    # needs: validate-modules
+    needs: validate-modules
     runs-on: ubuntu-latest
     outputs:
       environment: ${{ steps.select-environment.outputs.environment || inputs.environment }}
@@ -106,6 +111,7 @@ jobs:
     environment: ${{ needs.select-environment.outputs.environment }}
     env:
       ENVIRONMENT: ${{ needs.select-environment.outputs.environment }}
+      REPORTS_DIR: ${{ github.workspace }}/terraform/environments/${{ needs.select-environment.outputs.environment }}/reports
     defaults:
       run:
         shell: bash
@@ -114,12 +120,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Make 'reports' directory
+        run: mkdir -p reports
+
       - name: Run tfsec
         uses: aquasecurity/tfsec-sarif-action@v0.1.4
         with:
           working_directory: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}
-          sarif_file: ${{ env.ENVIRONMENT }}_tfsec.sarif
+          sarif_file: ${{ env.REPORTS_DIR }}/${{ env.ENVIRONMENT }}_tfsec.sarif
           tfvars_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}/${{ env.ENVIRONMENT }}.auto.tfvars
+          tfsec_args: "--soft-fail"
 
       # TODO: uncomment when repo is public
       # - name: Upload SARIF file
@@ -136,23 +146,39 @@ jobs:
       - name: Terraform fmt
         id: fmt
         run: terraform fmt -check
+        continue-on-error: true
 
       - name: Terraform init
         id: init
         run: terraform init
+        continue-on-error: true
 
       - name: Terraform validate
         id: validate
         run: terraform validate -no-color
+        continue-on-error: true
 
       - name: Terraform plan
-        if: github.event_name == 'pull_request'
+        # if: github.event_name == 'pull_request'
         id: plan
         run: |
-          terraform plan \
+          terraform plan -out=${{ env.ENVIRONMENT }}.json \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
+        continue-on-error: true
+
+      - name: Run Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@ff33f691d8d0c60287bbd408d84b9a7cbb6c27d1 # v12.2121.0
+        with:
+          file: ${{ env.ENVIRONMENT }}.json
+          quiet: true
+          soft_fail: false
+          framework: terraform
+          output_format: sarif
+          output_file_path: ${{ env.REPORTS_DIR }}/${{ env.ENVIRONMENT }}_checkov
+          download_external_modules: true
         continue-on-error: true
 
       - name: Update pull request
@@ -164,7 +190,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const tf_result = ${{ steps.tfsec.tfsec-return-code }} ? 'failure' : 'success'
-            const output = `#### tfsec scan result code ㊙️ `${tf_result}`
+            const output = `#### Tfsec Scan Result  ㊙️ `${tf_result}`
             #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
@@ -195,12 +221,29 @@ jobs:
               body: output
             })
 
-      - name: Terraform plan status
-        if: steps.plan.outcome == 'failure'
+      - name: Upload reports as artifact
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: ${{ env.ENVIRONMENT }}_scan_results
+          path: ${{ env.REPORTS_DIR }}
+          retention-days: 5
+
+      - name: Check tfsec status
+        if: steps.tfsec.tfsec-return-code
+        run: exit 1
+
+      - name: Check terraform status
+        if: steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure' || steps.validate.outcome == 'failure'
+        run: exit 1
+
+      - name: Check checkov status
+        if: steps.checkov.conclusion == 'failure'
         run: exit 1
 
       - name: Terraform apply
-        if: github.event_name == 'workflow_dispatch' || github.event_name == 'repository_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
+        # if: github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
+        if: inputs.tf_apply || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         id: apply
         run: |
           terraform apply -no-color -auto-approve \
