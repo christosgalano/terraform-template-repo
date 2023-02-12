@@ -233,7 +233,7 @@ jobs:
         run: exit 1
 
       - name: Check checkov status
-        if: steps.checkov.conclusion == 'failure'
+        if: steps.checkov.outcome == 'failure'
         run: exit 1
 
       - name: Terraform apply
