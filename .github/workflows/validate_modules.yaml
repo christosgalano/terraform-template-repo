@@ -27,7 +27,7 @@ jobs:
     name: select-modules
     runs-on: ubuntu-latest
     outputs:
-      modules: ${{ steps.select-changed-modules.outputs.modules || steps.select-all-modules.outputs.modules }}
+      modules: ${{ steps.select-all-modules.outputs.modules }}
     defaults:
       run:
         shell: bash
@@ -35,34 +35,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Find which module/s changed
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
-        uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            network:
-              - '**/modules/network/**'
-            private_keyvault:
-              - '**/modules/private_keyvault/**'
-
-      - name: Select changed modules
-        if: github.event_name == 'push' || github.event_name == 'pull_request'
-        id: select-changed-modules
-        run: |
-          modules=()
-          if [ "${{ steps.filter.outputs.network }}" == "true" ]; then
-            modules+=("network")
-          fi
-          if [ "${{ steps.filter.outputs.private_keyvault }}" == "true" ]; then
-            modules+=("private_keyvault")
-          fi
-          modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
-          echo "Selected modules: $modules_json"
-          echo "modules=$modules_json" >> $GITHUB_OUTPUT
-
       - name: Select all modules
-        if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call'
         id: select-all-modules
         working-directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}
         run: |
