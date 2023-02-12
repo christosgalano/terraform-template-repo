@@ -58,6 +58,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          sleep 30s
           status=$(gh run list --workflow validate-modules --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
           echo "Current status: $status"
 
