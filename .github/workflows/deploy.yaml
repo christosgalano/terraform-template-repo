@@ -60,10 +60,14 @@ jobs:
         run: |
           sleep 5
           status=$(gh run list --workflow validate_modules.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
+          echo "Current status: $status"
+
           while [ "$status" == "in_progress" ]; do
             status=$(gh run list --workflow validate_modules.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
+            echo "Current status: $status"
             sleep 2
           done
+
           workflow_conclusion=$(gh run list --workflow test.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "completed.*" | head -1 | awk '{print $2}')
           echo "Latest run of validate-modules workflow status: $workflow_conclusion"
           echo "workflow_conclusion=$workflow_conclusion" >> $GITHUB_OUTPUT
