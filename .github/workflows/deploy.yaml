@@ -62,12 +62,12 @@ jobs:
           while [ "$status" == "in_progress" ]; do
             status=$(gh run list --workflow validate_modules.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
           done
-          conclusion=$(gh run list --workflow test.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "completed.*" | head -1 | awk '{print $2}')
-          echo "Latest run of validate-modules workflow status: $conclusion"
-          echo "conclusion=$conclusion" >> $GITHUB_OUTPUT
+          workflow_conclusion=$(gh run list --workflow test.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "completed.*" | head -1 | awk '{print $2}')
+          echo "Latest run of validate-modules workflow status: $workflow_conclusion"
+          echo "workflow_conclusion=$workflow_conclusion" >> $GITHUB_OUTPUT
 
       - name: Check workflow status
-        if: steps.get-workflow-status.conclusion == 'failure'
+        if: steps.get-workflow-status.workflow_conclusion == 'failure'
         run: |
           echo "Latest run of validate-modules was a failure"
           exit 1
