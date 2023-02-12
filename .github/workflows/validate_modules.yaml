@@ -18,6 +18,12 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
 
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+  pull-requests: write
+
 env:
   TERRAFORM_REL_MOD_DIR: terraform/modules
   TERRAFORM_ABS_MOD_DIR: ${{ github.workspace }}/terraform/modules
