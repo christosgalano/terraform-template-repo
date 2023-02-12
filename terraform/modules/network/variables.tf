@@ -10,7 +10,7 @@ variable "location" {
 
 variable "resource_group_name" {
   type        = string
-  description = "Name of the resource group where the virtual network will reside."
+  description = "Name of the resource group where the virtual network will reside"
 }
 
 variable "address_space" {
@@ -29,6 +29,12 @@ variable "subnets" {
     condition     = length(var.subnets) >= 1
     error_message = "Virtual network must contain at least one subnet."
   }
+}
+
+variable "private_endpoint_network_policies_enabled" {
+  type        = bool
+  default     = true
+  description = "Whether to enable private endpoint network policies in all subnets"
 }
 
 variable "tags" {
