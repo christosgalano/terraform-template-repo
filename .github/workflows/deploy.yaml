@@ -47,7 +47,16 @@ env:
 
 jobs:
   validate-modules:
-    uses: ./.github/workflows/validate_modules.yaml
+    name: validate-modules-workflow-status
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate workflow status
+        uses: xembly/validate-workflow-status@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: validate-modules
+          branch: main
+          status: success
 
   select-environment:
     name: select-environment
@@ -154,10 +163,9 @@ jobs:
         continue-on-error: true
 
       - name: Terraform plan
-        # if: github.event_name == 'pull_request'
         id: plan
         run: |
-          terraform plan \
+          terraform plan -out=${{ env.ENVIRONMENT }}.tf \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
@@ -237,11 +245,10 @@ jobs:
         run: exit 1
 
       - name: Terraform apply
-        # if: github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         if: inputs.tf_apply || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         id: apply
         run: |
-          terraform apply \
+          terraform apply ${{ env.ENVIRONMENT }}.tf \
             -no-color -auto-approve \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
