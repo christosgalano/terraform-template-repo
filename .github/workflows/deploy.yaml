@@ -2,16 +2,16 @@
 name: deploy
 run-name: ${{ github.workflow }}
 on:
-  # push:
-  #   branches:
-  #     - main
-  #   paths:
-  #     - terraform/environments/**
-  # pull_request:
-  #   branches:
-  #     - main
-  #   paths:
-  #     - terraform/environments/**
+  push:
+    branches:
+      - main
+    paths:
+      - terraform/environments/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - terraform/environments/**
   workflow_dispatch:
     inputs:
       environment:
