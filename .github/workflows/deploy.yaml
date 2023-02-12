@@ -39,7 +39,6 @@ permissions:
   actions: read
   contents: read
   id-token: write
-  security-events: write
   pull-requests: write
 
 env:
