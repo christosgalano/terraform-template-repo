@@ -16,7 +16,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   TERRAFORM_REL_MOD_DIR: terraform/modules
