@@ -100,6 +100,7 @@ jobs:
         id: tfsec
         with:
           working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+          additional_args: "--concise-output"
           soft_fail: false
         continue-on-error: true
 

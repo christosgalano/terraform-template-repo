@@ -141,7 +141,7 @@ jobs:
         id: tfsec
         with:
           working_directory: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}
-          additional_args: "--tfvars-file ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}/${{ env.ENVIRONMENT }}.auto.tfvars"
+          additional_args: "--tfvars-file ${{ env.ENVIRONMENT }}.auto.tfvars --concise-output"
           soft_fail: false
         continue-on-error: true
 
