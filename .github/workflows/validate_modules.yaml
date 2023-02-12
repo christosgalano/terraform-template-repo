@@ -99,7 +99,7 @@ jobs:
         id: tfsec
         with:
           working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-          sarif_file: reports/${{ matrix.module }}_tfsec.sarif
+          sarif_file: ${{ env.REPORTS_DIR}}/${{ matrix.module }}_tfsec.sarif
           tfsec_args: "--soft-fail"
 
       # TODO: uncomment when repo is public
