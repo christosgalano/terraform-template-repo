@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: validate-deploy-workflows
+  group: ${{ github.workflow }}
   cancel-in-progress: false
 
 env:
