@@ -113,9 +113,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ needs.select-environment.outputs.environment }}
 
-    # Cancel in progress jobs/workflows that have the same environment
+    # Cancel in progress deploy workflows, only deploy the most recently triggered one
     concurrency:
-      group: ${{ github.workflow }}-${{ needs.select-environment.outputs.environment }}
+      group: validate-deploy-workflows
       cancel-in-progress: true
 
     env:
