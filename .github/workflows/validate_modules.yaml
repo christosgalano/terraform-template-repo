@@ -12,7 +12,7 @@ on:
       - main
     paths:
       - terraform/modules/**
-  workflow_call:
+  workflow_dispatch:
 
 concurrency:
   group: validate-deploy-workflows
