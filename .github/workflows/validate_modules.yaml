@@ -138,12 +138,12 @@ jobs:
         with:
           directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
           quiet: true # display only failed checks
-          soft_fail: true # do not return an error code if there are failed checks
+          soft_fail: false
           framework: terraform
           output_format: sarif
           output_file_path: ${{ env.REPORTS_DIR }}/${{ matrix.module }}_checkov.sarif
           download_external_modules: true
-          log_level: DEBUG # optional: set log level. Default WARNING
+        continue-on-error: true
 
       # TODO: uncomment when repo is public
       # - name: Upload checkov SARIF file
@@ -198,16 +198,14 @@ jobs:
           path: ${{ env.REPORTS_DIR }}
           retention-days: 10
 
-      - name: Check tfsec result code
-        if: ${{ steps.tfsec.tfsec-return-code }}
+      - name: Check tfsec status
+        if: steps.tfsec.tfsec-return-code
         run: exit 1
 
       - name: Check terraform status
         if: steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure' || steps.validate.outcome == 'failure'
         run: exit 1
 
-      # - name: Check tfsec result code
-      #   if: ${{ steps.tfsec.tfsec-return-code }}
-      #   run: |
-      #     echo "tfsec returned an error code of " ${{ steps.tfsec.tfsec-return-code }}
-      #     exit 1
+      - name: Check checkov status
+        if: steps.checkov.conclusion == 'failure'
+        run: exit 1
