@@ -133,12 +133,10 @@ jobs:
       fail-fast: true
       matrix:
         environment: ${{ fromJson(needs.select-environments.outputs.environments) }}
-    env:
-      ENVIRONMENT: ${{ needs.select-environment.outputs.environment }}
     defaults:
       run:
         shell: bash
-        working-directory: ${{ env.TERRAFORM_ABS_ENV_DIR }}/${{ env.ENVIRONMENT }}
+        working-directory: ${{ env.TERRAFORM_ABS_ENV_DIR }}/${{ matrix.environment }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -152,9 +150,9 @@ jobs:
         uses: aquasecurity/tfsec-action@v1.0.3
         id: tfsec
         with:
-          working_directory: ${{ env.TERRAFORM_ABS_ENV_DIR }}/${{ env.ENVIRONMENT }}
+          working_directory: ${{ env.TERRAFORM_ABS_ENV_DIR }}/${{ matrix.environment }}
           soft_fail: false
-          additional_args: "--tfvars-file ${{ env.TERRAFORM_REL_ENV_DIR }}/${{ env.ENVIRONMENT }}/${{ env.ENVIRONMENT }}.auto.tfvars --concise-output"
+          additional_args: "--tfvars-file ${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}/${{ matrix.environment }}.auto.tfvars --concise-output"
           github_token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
@@ -176,7 +174,7 @@ jobs:
       - name: Terraform plan
         id: plan
         run: |
-          terraform plan -out=${{ env.ENVIRONMENT }}.tf \
+          terraform plan -out=${{ matrix.environment }}.tf \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
@@ -212,7 +210,7 @@ jobs:
 
             </details>
 
-            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ env.ENVIRONMENT }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -233,7 +231,7 @@ jobs:
         if: inputs.tf_apply || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         id: apply
         run: |
-          terraform apply ${{ env.ENVIRONMENT }}.tf \
+          terraform apply ${{ matrix.environment }}.tf \
             -no-color -auto-approve \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
