@@ -181,11 +181,11 @@ jobs:
 
       - name: Test sarifs 1
         working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-        run: ls -al *.sarif
+        run: ls -al
 
       - name: Test sarifs 2
         working-directory: ${{ env.REPORTS_DIR }}
-        run: ls -al *.sarif
+        run: ls -al
 
       - name: Upload reports as artifact
         uses: actions/upload-artifact@v3
