@@ -182,16 +182,27 @@ jobs:
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
         continue-on-error: true
 
-      - name: Append plan to job summary
-        run: echo "{{ steps.plan.outputs.stdout }}" >> $GITHUB_JOB_SUMMARY
-
       - name: Update pull request
         uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
+        id: update-pr
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
           script: |
-            const output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('${{ matrix.environment }}')
+            })
+
+            // 2. Prepare format of the comment
+            var character_limit_reached = "false"
+            var output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
             #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
@@ -215,12 +226,55 @@ jobs:
 
             *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+            // 3. Check if character limit was reached and update accordingly
+            if (output.length > 65536) {
+              character_limit_reached = "true"
+              output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
+              #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+              #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+              #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+              <details><summary>Validation Output</summary>
+              
+              \`\`\`hcl
+              ${{ steps.validate.outputs.stdout }}
+              \`\`\`
+              
+              </details>
+              
+              #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+              
+              <details><summary>Show Plan</summary>
+              \`\`\`hcl
+              Terraform's plan was too big to fit in a PR comment. Check the following step's summary to see the plan.
+              \`\`\`
+              
+              </details>
+              
+              *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            }
+
+            // 4. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }
+
+            return character_limit_reached
+
+      - name: Terraform plan summary
+        if: steps.update-pr.outputs.result == "true"
+        run: echo "#### Terraform Plan 📖\n\`\`\`hcl{{ steps.plan.outputs.stdout }}\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Check tfsec status
         if: steps.tfsec.outcome == 'failure'
