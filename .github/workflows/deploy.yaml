@@ -227,7 +227,7 @@ jobs:
             *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
             // 3. Check if character limit was reached and update accordingly
-            if (output.length > 65536) {
+            if (output.length < 65536) {
               character_limit_reached = "true"
               output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
               #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
@@ -244,9 +244,7 @@ jobs:
               #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
               
               <details><summary>Show Plan</summary>
-              \`\`\`hcl
-              Terraform's plan was too big to fit in a PR comment. Check the following step's summary to see the plan.
-              \`\`\`
+              Terraform's plan was too big to fit in a PR comment. You find the plan [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).
               
               </details>
               
@@ -273,7 +271,7 @@ jobs:
             return character_limit_reached
 
       - name: Terraform plan summary
-        if: steps.update-pr.outputs.result == 'false'
+        if: steps.update-pr.outputs.result == 'true'
         run: printf "### Terraform plan for ${{ matrix.environment }}📖\`${{ steps.plan.outcome }}\`\n\`\`\`hcl\n${{ steps.plan.outputs.stdout }}\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Check tfsec status
