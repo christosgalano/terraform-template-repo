@@ -102,6 +102,7 @@ jobs:
           working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
           additional_args: "--concise-output"
           soft_fail: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
       - name: Terraform fmt
