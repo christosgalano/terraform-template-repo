@@ -62,7 +62,7 @@ jobs:
         uses: LASER-Yi/workflow-status@v0.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          workflow: validate_modules.yml
+          workflow: validate_modules.yaml
           branch: main
           # event: push
 
