@@ -176,7 +176,7 @@ jobs:
         run: |
           terraform plan \
             -no-color -input=false \
-            -out=${{ matrix.environment }}.tf \
+            -out=${{ matrix.environment }}.tfplan \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
@@ -185,13 +185,9 @@ jobs:
       - name: Print output
         run: echo "terraform\n${{ steps.plan.outputs.stdout }}"
 
-      # ${process.env.PLAN}
-
       - name: Update pull request
         uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -239,7 +235,7 @@ jobs:
         id: apply
         run: |
           terraform apply \
-            ${{ matrix.environment }}.tf \
+            ${{ matrix.environment }}.tfplan \
             -no-color -auto-approve \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
