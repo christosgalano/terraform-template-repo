@@ -104,7 +104,7 @@ jobs:
             environments+=("staging")
           fi
           if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
-            environment+=("production")
+            environments+=("production")
           fi
           environments_json=$(jq -c -n '$ARGS.positional' --args "${environments[@]}")
           echo "Selected environments: $environments_json"
@@ -194,7 +194,7 @@ jobs:
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
             <details><summary>Validation Output</summary>
 
-            \`\`\`\n
+            \`\`\`hcl
             ${{ steps.validate.outputs.stdout }}
             \`\`\`
 
@@ -204,7 +204,7 @@ jobs:
 
             <details><summary>Show Plan</summary>
 
-            \`\`\`\n
+            \`\`\`hcl
             ${process.env.PLAN}
             \`\`\`
 
