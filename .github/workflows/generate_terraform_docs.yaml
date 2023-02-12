@@ -1,3 +1,4 @@
+# This workflow generates Terraform documentation for the modules included in the repository.
 name: generate-terraform-docs
 run-name: ${{ github.workflow }}
 on:

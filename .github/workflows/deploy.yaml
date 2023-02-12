@@ -1,4 +1,4 @@
-# This workflow validates our Terraform modules, selects our deployment's environment, and then deploys our Terraform code.
+# This workflow makes sure our Terraform modules are valid, selects our deployment's environment(s), and then deploys our Terraform code.
 name: deploy
 run-name: ${{ github.workflow }}
 on:
@@ -24,13 +24,13 @@ on:
         required: true
         description: "Run `terraform apply`"
 
-# Cancel in progress workflows based on the following:
+# Cancel in progress workflows based on the following criteria:
 # - if the trigger was push/pull_request
 # - if the trigger was workflow_dispatch and the environment is the same
-#
-# Simultaneous deployment is only allowed when its manually triggered and
-# targets different environments, otherwise the most recently trigger workflow
-# gets executed.
+
+# Simultaneous deployment is only allowed when it's manually triggered
+# and targets different environments; otherwise, the most recently
+# triggered workflow gets executed.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
   cancel-in-progress: true
@@ -46,6 +46,8 @@ env:
   TERRAFORM_ABS_ENV_DIR: ${{ github.workspace }}/terraform/environments
 
 jobs:
+  # Get the status of validate-modules latest run.
+  # If a new run is currently `queued` or `in_progress`, wait until it completes.
   validate-modules:
     name: validate-modules-workflow-status
     runs-on: ubuntu-latest
@@ -77,6 +79,10 @@ jobs:
           echo "Latest run of validate-modules was a failure"
           exit 1
 
+  # Select the environments to deploy to.
+  # The selection is based on one of the following:
+  # - file modifications (push | pull_request)
+  # - the environment supplied as an input (workflow_dispatch) 
   select-environments:
     name: select-environments
     needs: validate-modules
@@ -130,16 +136,17 @@ jobs:
           echo "Selected environment: $environment_json"
           echo "environment=$environment_json" >> $GITHUB_OUTPUT
 
+  # Deploy our Terraform code.
+  # The flow of execution is as follows:
+  # 1. Deploy to the development environment (if the development environment was selected).
+  # 2. Deploy to the staging environment (if the staging environment was selected and the development deployment was completed successfully).
+  # 3. Deploy to the production environment (if the production environment was selected and the staging deployment was successful).
   deploy:
     name: deploy-to-${{ matrix.environment }}
     needs: select-environments
     runs-on: ubuntu-latest
     environment: ${{ matrix.environment }}
 
-    # The flow of execution is the following:
-    # 1. Deploy to the development environment (if changes were made to terraform/environments/development)
-    # 2. Deploy to the staging     environment (if changes were made to terraform/environments/staging    and the development deployment completed successfully)
-    # 3. Deploy to the production  environment (if changes were made to terraform/environments/production and the staging     deployment completed successfully)
     strategy:
       max-parallel: 1
       fail-fast: true

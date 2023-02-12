@@ -1,4 +1,4 @@
-# This workflow requires an approval and based on that destroys our infrastructure.
+# This workflow requires an approval, and based on that, it destroys our infrastructure.
 name: destroy
 run-name: ${{ github.workflow }}
 on:
@@ -9,14 +9,15 @@ on:
         required: true
         description: "Specify the environment to be destroyed"
 
-# Cancel in progress workflows which have the same environment.
-# The newly triggered workflow is going to fail by default because another deployment has the Terraform lock,
-# so we override this and always deploy the most recently triggered workflow.
+# Cancel in-progress workflows that have the same environment.
+# By default, the newly triggered workflow will fail because another deployment has the Terraform lock.
+# So we override this and always deploy the most recently triggered workflow.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
   cancel-in-progress: true
 
 jobs:
+  # Require approval in the form of an open issue in order to destroy the infrastructure.
   approve:
     name: approve-infra-teardown
     runs-on: ubuntu-latest
@@ -32,6 +33,7 @@ jobs:
           issue-title: "Approve infrastructure teardown for the ${{ inputs.environment }} environment"
           exclude-workflow-initiator-as-approver: false
 
+  # Destroy the infrastructure.
   destroy:
     name: destroy
     needs: approve
