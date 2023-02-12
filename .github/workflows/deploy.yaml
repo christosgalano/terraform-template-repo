@@ -64,7 +64,7 @@ jobs:
           while [ "$status" == "queued" ] || [ "$status" == "in_progress" ]; do
             status=$(gh run list --workflow validate-modules --limit 1 --repo ${{ github.repository }} | awk '{print $1}')
             echo "Current validate-modules workflow status: $status"
-            sleep 3s
+            sleep 5s
           done
 
           workflow_conclusion=$(gh run list --workflow validate-modules --repo ${{ github.repository }} | grep -oh "completed.*" | head -1 | awk '{print $2}')
