@@ -96,7 +96,7 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1.0.4
+        uses: aquasecurity/tfsec-action@v1
         id: tfsec
         with:
           working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}

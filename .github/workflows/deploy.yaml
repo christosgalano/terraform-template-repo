@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validate workflow status
-        uses: LASER-Yi/workflow-status@v0.0.2
+        uses: LASER-Yi/workflow-status@v0.1.0
         id: validate-modules-workflow-status
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -137,7 +137,7 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
       - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1.0.4
+        uses: aquasecurity/tfsec-action@v1
         id: tfsec
         with:
           working_directory: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}
