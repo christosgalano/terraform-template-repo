@@ -285,5 +285,4 @@ jobs:
       - name: Terraform apply
         if: inputs.tf_apply || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         id: apply
-        run: |
-          terraform apply \${{ matrix.environment }}.tfplan
+        run: terraform apply \${{ matrix.environment }}.tfplan

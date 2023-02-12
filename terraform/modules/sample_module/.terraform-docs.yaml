@@ -1,0 +1,63 @@
+formatter: "markdown table" # required
+
+version: ">= 0.13.0"
+
+# Include usage example
+# content: |-
+#   ## Usage
+#   Basic usage of this module is as follows:
+#   ```hcl
+#   module "example" {
+#     {{"  "}} source = "<module-path>"
+#     {{- if .Module.RequiredInputs }}
+#     {{"\n "}} # Required variables
+#     {{- range .Module.RequiredInputs }}
+#     {{"  "}} {{ .Name }} = {{ .GetValue }}
+#     {{- end }}
+#     {{- end }}
+#     {{- if .Module.OptionalInputs }}
+#     {{"\n "}}  # Optional variables
+#     {{- range .Module.OptionalInputs }}
+#     {{"  "}} {{ .Name }} = {{ .GetValue | printf "%s" }}
+#     {{- end }}
+#     {{- end }}
+#   }
+#   ```
+
+content: |-
+  {{ .Requirements }}
+
+  {{ .Providers }}
+
+  {{ .Modules }}
+
+  {{ .Resources }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}
+
+output:
+  file: "README.md"
+  mode: replace
+  template: |-
+    {{ .Content }}
+
+sort:
+  enabled: true
+  by: required
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: true
+  escape: true
+  hide-empty: true
+  html: false
+  indent: 2
+  lockfile: true
+  read-comments: true
+  required: true
+  sensitive: true
+  type: true
