@@ -134,7 +134,7 @@ jobs:
 
       - name: Run Checkov
         id: checkov
-        uses: bridgecrewio/checkov-action@v12.1347.0
+        uses: bridgecrewio/checkov-action@ff33f691d8d0c60287bbd408d84b9a7cbb6c27d1 # v12.2121.0
         with:
           directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
           quiet: true # display only failed checks
