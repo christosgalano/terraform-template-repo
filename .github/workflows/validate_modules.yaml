@@ -19,7 +19,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  TERRAFORM_MODULES_DIR: ${{ github.workspace }}/terraform/modules
+  TERRAFORM_REL_MOD_DIR: terraform/modules
+  TERRAFORM_ABS_MOD_DIR: ${{ github.workspace }}/terraform/modules
 
 jobs:
   select-modules:
@@ -63,7 +64,7 @@ jobs:
       - name: Select all modules
         if: github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call'
         id: select-all-modules
-        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}
+        working-directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}
         run: |
           modules=( $(ls ./) )
           modules_json=$(jq -c -n '$ARGS.positional' --args "${modules[@]}")
@@ -82,8 +83,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    env:
-      REPORTS_DIR: ${{ github.workspace }}/terraform/modules/${{ matrix.module }}/reports
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -97,26 +96,26 @@ jobs:
         uses: aquasecurity/tfsec-action@v1.0.3
         id: tfsec
         with:
-          working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+          working_directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}/${{ matrix.module }}
           soft_fail: false
           additional_args: "--concise-output"
           github_token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
       - name: Terraform fmt
-        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+        working-directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}/${{ matrix.module }}
         id: fmt
         run: terraform fmt -check
         continue-on-error: true
 
       - name: Terraform init
-        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}/validate
+        working-directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}/${{ matrix.module }}/validate
         id: init
         run: terraform init
         continue-on-error: true
 
       - name: Terraform validate
-        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}/validate
+        working-directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}/${{ matrix.module }}/validate
         id: validate
         run: terraform validate -no-color
         continue-on-error: true
@@ -126,7 +125,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
+            const output = `## ${{ matrix.module }} module
+            #### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
             #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
@@ -138,7 +138,7 @@ jobs:
 
             </details>
 
-            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_MOD_DIR }}/${{ matrix.module }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,

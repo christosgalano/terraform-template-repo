@@ -24,9 +24,16 @@ on:
         required: true
         description: "Run `terraform apply`"
 
+# Cancel in progress workflows based on the following:
+# - if the trigger was push/pull_request
+# - if the trigger was workflow_dispatch and the environment is the same
+#
+# Simultaneous deployment is only allowed when its manually triggered and
+# targets different environments, otherwise the most recently trigger workflow
+# gets executed.
 concurrency:
-  group: validate-deploy-workflows
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
+  cancel-in-progress: true
 
 permissions:
   actions: read
@@ -36,7 +43,8 @@ permissions:
   pull-requests: write
 
 env:
-  TERRAFORM_ENV_DIR: ${{ github.workspace }}/terraform/environments
+  TERRAFORM_REL_ENV_DIR: terraform/environments
+  TERRAFORM_ABS_ENV_DIR: ${{ github.workspace }}/terraform/environments
 
 jobs:
   validate-modules:
@@ -50,6 +58,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           workflow: validate_modules.yaml
           branch: main
+          wait: true
 
       - name: Check workflow status
         if: steps.validate-modules-workflow-status.conclusion == 'failure'
@@ -112,19 +121,12 @@ jobs:
     needs: select-environment
     runs-on: ubuntu-latest
     environment: ${{ needs.select-environment.outputs.environment }}
-
-    # Cancel in progress deploy workflows, only deploy the most recently triggered one
-    concurrency:
-      group: validate-deploy-workflows
-      cancel-in-progress: true
-
     env:
       ENVIRONMENT: ${{ needs.select-environment.outputs.environment }}
-      REPORTS_DIR: ${{ github.workspace }}/terraform/environments/${{ needs.select-environment.outputs.environment }}/reports
     defaults:
       run:
         shell: bash
-        working-directory: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}
+        working-directory: ${{ env.TERRAFORM_ABS_ENV_DIR }}/${{ env.ENVIRONMENT }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -138,9 +140,9 @@ jobs:
         uses: aquasecurity/tfsec-action@v1.0.3
         id: tfsec
         with:
-          working_directory: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}
+          working_directory: ${{ env.TERRAFORM_ABS_ENV_DIR }}/${{ env.ENVIRONMENT }}
           soft_fail: false
-          additional_args: "--tfvars-file ./terraform/environments/${{ env.ENVIRONMENT }}/${{ env.ENVIRONMENT }}.auto.tfvars --concise-output"
+          additional_args: "--tfvars-file ${{ env.TERRAFORM_REL_ENV_DIR }}/${{ env.ENVIRONMENT }}/${{ env.ENVIRONMENT }}.auto.tfvars --concise-output"
           github_token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
@@ -198,7 +200,7 @@ jobs:
 
             </details>
 
-            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ env.ENVIRONMENT }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
