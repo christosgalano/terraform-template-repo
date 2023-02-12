@@ -1,5 +1,5 @@
 <!-- BEGIN_TF_DOCS -->
-## Usage purpose
+## Purpose
 Used to validate the module in which it resides.
 
 
