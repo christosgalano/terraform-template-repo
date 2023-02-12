@@ -100,8 +100,9 @@ jobs:
         id: tfsec
         with:
           working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-          additional_args: "--concise-output"
+          version: v1.28.1
           soft_fail: false
+          additional_args: "--concise-output"
           github_token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
