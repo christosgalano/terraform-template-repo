@@ -27,8 +27,9 @@
 | <a name="input_address_space"></a> [address\_space](#input\_address\_space) | List of the virtual network's address spaces | `list(string)` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Location of the virtual network | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the virtual network | `string` | n/a | yes |
-| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group where the virtual network will reside. | `string` | n/a | yes |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group where the virtual network will reside | `string` | n/a | yes |
 | <a name="input_subnets"></a> [subnets](#input\_subnets) | Subnets that the virtual network will contain, format: 'subnet\_name' = 'subnet\_address\_prefix' | `map(string)` | n/a | yes |
+| <a name="input_private_endpoint_network_policies_enabled"></a> [private\_endpoint\_network\_policies\_enabled](#input\_private\_endpoint\_network\_policies\_enabled) | Whether to enable private endpoint network policies in all subnets | `bool` | `true` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to be applied on the resource | `map(string)` | `{}` | no |
 
 ## Outputs
