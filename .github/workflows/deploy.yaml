@@ -244,7 +244,7 @@ jobs:
               #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
               
               <details><summary>Show Plan</summary>
-              Terraform's plan was too big to fit in a PR comment. You find the plan [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).
+              Terraform's plan was too big to fit in a PR comment. You find the plan <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">here</a>.
               
               </details>
               
