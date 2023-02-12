@@ -182,8 +182,8 @@ jobs:
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
         continue-on-error: true
 
-      - name: Print output
-        run: echo "terraform\n${{ steps.plan.outputs.stdout }}"
+      - name: Append plan to job summary
+        run: echo "{{ steps.plan.outputs.stdout }}" >> $GITHUB_JOB_SUMMARY
 
       - name: Update pull request
         uses: actions/github-script@v6
