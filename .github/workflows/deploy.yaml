@@ -157,7 +157,7 @@ jobs:
         # if: github.event_name == 'pull_request'
         id: plan
         run: |
-          terraform plan -out=${{ env.ENVIRONMENT }}.tf \
+          terraform plan -out=${{ env.ENVIRONMENT }}.json \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
@@ -167,7 +167,7 @@ jobs:
         id: checkov
         uses: bridgecrewio/checkov-action@ff33f691d8d0c60287bbd408d84b9a7cbb6c27d1 # v12.2121.0
         with:
-          file: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}/${{ env.ENVIRONMENT }}.tf
+          file: ${{ env.TERRAFORM_ENV_DIR }}/${{ env.ENVIRONMENT }}/${{ env.ENVIRONMENT }}.json
           quiet: true
           soft_fail: false
           framework: terraform
@@ -241,7 +241,7 @@ jobs:
         if: inputs.tf_apply || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         id: apply
         run: |
-          terraform apply ${{ env.ENVIRONMENT }}.tf \
+          terraform apply ${{ env.ENVIRONMENT }}.json \
             -no-color -auto-approve \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
