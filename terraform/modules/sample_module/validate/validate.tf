@@ -13,6 +13,6 @@ provider "azurerm" {
   features {}
 }
 
-module "private_keyvault" {
+module "sample_module" {
   source = "../"
 }
