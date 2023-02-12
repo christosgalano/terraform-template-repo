@@ -1,4 +1,4 @@
-# This workflow requires an approval, and based on that, it destroys our infrastructure.
+# This workflow requires an approval, and based on that, it destroys our environment's infrastructure.
 name: destroy
 run-name: ${{ github.workflow }}
 on:
