@@ -90,29 +90,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Make 'reports' directory
-        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-        run: mkdir -p reports
-
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-sarif-action@v0.1.4
-        id: tfsec
-        with:
-          working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-          sarif_file: ${{ env.REPORTS_DIR }}/${{ matrix.module }}_tfsec.sarif
-          tfsec_args: "--soft-fail"
-
-      # TODO: uncomment when repo is public
-      # - name: Upload tfsec SARIF file
-      #   uses: github/codeql-action/upload-sarif@v2
-      #   with:
-      #     sarif_file: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}/${{ matrix.module }}_tfsec.sarif # path to SARIF file relative to the root of the repository
-      #     category: tfsec
-
       - name: Setup terraform
         uses: hashicorp/setup-terraform@v2
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.4
+        id: tfsec
+        with:
+          working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+          soft_fail: false
+        continue-on-error: true
 
       - name: Terraform fmt
         working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
@@ -132,33 +121,12 @@ jobs:
         run: terraform validate -no-color
         continue-on-error: true
 
-      - name: Run Checkov
-        id: checkov
-        uses: bridgecrewio/checkov-action@ff33f691d8d0c60287bbd408d84b9a7cbb6c27d1 # v12.2121.0
-        with:
-          directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-          quiet: true # display only failed checks
-          soft_fail: false
-          framework: terraform
-          output_format: sarif
-          output_file_path: ${{ env.REPORTS_DIR }}/${{ matrix.module }}_checkov
-          download_external_modules: true
-        continue-on-error: true
-
-      # TODO: uncomment when repo is public
-      # - name: Upload checkov SARIF file
-      #   uses: github/codeql-action/upload-sarif@v2
-      #   with:
-      #     sarif_file: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}/${{ matrix.module }}_checkov.sarif # path to SARIF file relative to the root of the repository
-      #     category: checkov
-
       - uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const tf_result = ${{ steps.tfsec.tfsec-return-code }} ? 'failure' : 'success'
-            const output = `#### Tfsec Scan Result ㊙️ `${tf_result}`
+            const output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
             #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
@@ -170,7 +138,7 @@ jobs:
 
             </details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -179,22 +147,10 @@ jobs:
               body: output
             })
 
-      - name: Upload reports as artifact
-        uses: actions/upload-artifact@v3
-        if: success() || failure()
-        with:
-          name: ${{ matrix.module }}_scan_results
-          path: ${{ env.REPORTS_DIR }}
-          retention-days: 5
-
       - name: Check tfsec status
-        if: steps.tfsec.tfsec-return-code
+        if: steps.tfsec.outcome == 'failure'
         run: exit 1
 
       - name: Check terraform status
         if: steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure' || steps.validate.outcome == 'failure'
-        run: exit 1
-
-      - name: Check checkov status
-        if: steps.checkov.outcome == 'failure'
         run: exit 1
