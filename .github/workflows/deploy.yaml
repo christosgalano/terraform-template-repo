@@ -286,9 +286,8 @@ jobs:
         if: inputs.tf_apply || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         id: apply
         run: |
-          terraform apply \
-            ${{ matrix.environment }}.tfplan \
-            -no-color -auto-approve \
+          terraform apply \${{ matrix.environment }}.tfplan \
+            -auto-approve \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
