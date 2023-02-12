@@ -84,27 +84,32 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      REPORTS_DIR: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}/reports
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Make 'reports' directory
+        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+        run: mkdir -p reports
 
       - name: Run tfsec
         uses: aquasecurity/tfsec-sarif-action@v0.1.4
         id: tfsec
         with:
           working_directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
-          sarif_file: ${{ matrix.module }}_tfsec.sarif
+          sarif_file: reports/${{ matrix.module }}_tfsec.sarif
+          tfsec_args: "--soft-fail"
 
       # TODO: uncomment when repo is public
-      # - name: Upload SARIF file
+      # - name: Upload tfsec SARIF file
       #   uses: github/codeql-action/upload-sarif@v2
       #   with:
-      #     sarif_file: ${{ env.TERRAFORM_ENV_DIR }}/${{ matrix.module }}_tfsec.sarif # path to SARIF file relative to the root of the repository
+      #     sarif_file: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}/${{ matrix.module }}_tfsec.sarif # path to SARIF file relative to the root of the repository
       #     category: tfsec
 
-      # TODO: perhaps add checkov action for terraform
-
-      - name: Setup Terraform
+      - name: Setup terraform
         uses: hashicorp/setup-terraform@v2
         with:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
@@ -113,16 +118,39 @@ jobs:
         working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
         id: fmt
         run: terraform fmt -check
+        continue-on-error: true
 
       - name: Terraform init
         working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}/validate
         id: init
         run: terraform init
+        continue-on-error: true
 
       - name: Terraform validate
         working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}/validate
         id: validate
         run: terraform validate -no-color
+        continue-on-error: true
+
+      - name: Run Checkov
+        id: checkov
+        uses: bridgecrewio/checkov-action@v12.1347.0
+        with:
+          directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+          quiet: true # display only failed checks
+          soft_fail: true # do not return an error code if there are failed checks
+          framework: terraform
+          output_format: sarif
+          output_file_path: ${{ env.REPORTS_DIR }}/${{ matrix.module }}_checkov.sarif
+          download_external_modules: true
+          log_level: DEBUG # optional: set log level. Default WARNING
+
+      # TODO: uncomment when repo is public
+      # - name: Upload checkov SARIF file
+      #   uses: github/codeql-action/upload-sarif@v2
+      #   with:
+      #     sarif_file: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}/${{ matrix.module }}_checkov.sarif # path to SARIF file relative to the root of the repository
+      #     category: checkov
 
       - uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
@@ -130,7 +158,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const tf_result = ${{ steps.tfsec.tfsec-return-code }} ? 'failure' : 'success'
-            const output = `#### tfsec scan result code ㊙️ `${tf_result}`
+            const output = `#### Tfsec Scan Result ㊙️ `${tf_result}`
             #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
@@ -150,3 +178,36 @@ jobs:
               repo: context.repo.repo,
               body: output
             })
+
+      - name: Echo checkov
+        run: echo ${{ steps.checkov.outputs.results }}
+
+      - name: Test sarifs 1
+        working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
+        run: ls -al *.sarif
+
+      - name: Test sarifs 2
+        working-directory: ${{ env.REPORTS_DIR }}
+        run: ls -al *.sarif
+
+      - name: Upload reports as artifact
+        uses: actions/upload-artifact@v3
+        if: success() || failure()
+        with:
+          name: reports
+          path: ${{ env.REPORTS_DIR }}
+          retention-days: 10
+
+      - name: Check tfsec result code
+        if: ${{ steps.tfsec.tfsec-return-code }}
+        run: exit 1
+
+      - name: Check terraform status
+        if: steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure' || steps.validate.outcome == 'failure'
+        run: exit 1
+
+      # - name: Check tfsec result code
+      #   if: ${{ steps.tfsec.tfsec-return-code }}
+      #   run: |
+      #     echo "tfsec returned an error code of " ${{ steps.tfsec.tfsec-return-code }}
+      #     exit 1
