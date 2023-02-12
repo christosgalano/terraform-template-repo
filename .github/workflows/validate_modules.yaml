@@ -1,4 +1,4 @@
-# This workflow validates changes made to one or modules.
+# This workflow validates our Terraform modules.
 name: validate-modules
 run-name: ${{ github.workflow }}
 on:
@@ -29,6 +29,7 @@ env:
   TERRAFORM_ABS_MOD_DIR: ${{ github.workspace }}/terraform/modules
 
 jobs:
+  # Retrieve and export all of the modules in the "terraform/modules" directory as a JSON array.
   select-modules:
     name: select-modules
     runs-on: ubuntu-latest
@@ -50,13 +51,15 @@ jobs:
           echo "Selected modules: $modules_json"
           echo "modules=$modules_json" >> $GITHUB_OUTPUT
 
+  # Validate the Terraform modules in matrix jobs. Each module has its own matrix job.
+  # If one or more matrix jobs fail, then the rest carry on normally and are not canceled.
   validate-module:
     name: validate-${{ matrix.module }}-module
     needs: select-modules
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 5 # validate up to 5 modules in parallel
-      fail-fast: false # do not cancel any queued or running job if one job fails
+      max-parallel: 5
+      fail-fast: false
       matrix:
         module: ${{ fromJson(needs.select-modules.outputs.modules) }}
     defaults:

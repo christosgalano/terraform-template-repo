@@ -1,0 +1,44 @@
+formatter: "markdown table" # required
+
+version: ">= 0.13.0"
+
+content: |-
+  ## Usage purpose
+  Used to validate the module in which it resides.
+
+  {{ .Requirements }}
+
+  {{ .Providers }}
+
+  {{ .Modules }}
+
+  {{ .Resources }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}
+
+output:
+  file: "README.md"
+  mode: replace
+  template: |-
+    {{ .Content }}
+
+sort:
+  enabled: true
+  by: required
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: true
+  escape: true
+  hide-empty: true
+  html: false
+  indent: 2
+  lockfile: true
+  read-comments: true
+  required: true
+  sensitive: true
+  type: true

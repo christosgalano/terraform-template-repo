@@ -1,3 +1,4 @@
+# This workflow generates Terraform documentation for the modules included in the repository.
 name: generate-terraform-docs
 run-name: ${{ github.workflow }}
 on:
@@ -25,6 +26,7 @@ jobs:
         uses: terraform-docs/gh-actions@v1.0.0
         with:
           find-dir: ${{ env.TERRAFORM_DIR }}/
-          args: "--config /github/workspace/terraform/.terraform-docs.yaml"
+          config-file: .terraform-docs.yaml
+          # args: "--config /github/workspace/terraform/.terraform-docs.yaml"
           output-method: replace
           git-push: "true"
