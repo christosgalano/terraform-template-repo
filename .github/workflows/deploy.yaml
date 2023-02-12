@@ -63,7 +63,7 @@ jobs:
             status=$(gh run list --workflow validate_modules.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
           done
           conclusion=$(gh run list --workflow test.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "completed.*" | head -1 | awk '{print $2}')
-          echo "Latest run of validate-modules workflow status: $conclusion" >> $GITHUB_OUTPUT
+          echo "Latest run of validate-modules workflow status: $conclusion"
           echo "conclusion=$conclusion" >> $GITHUB_OUTPUT
 
       - name: Check workflow status
