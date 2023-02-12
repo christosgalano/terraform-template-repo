@@ -11,10 +11,10 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "subnets" {
-  for_each             = var.subnets
-  name                 = each.key
-  address_prefixes     = [each.value]
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+  for_each                                  = var.subnets
+  name                                      = each.key
+  address_prefixes                          = [each.value]
+  resource_group_name                       = var.resource_group_name
+  virtual_network_name                      = azurerm_virtual_network.vnet.name
   private_endpoint_network_policies_enabled = var.private_endpoint_network_policies_enabled
 }

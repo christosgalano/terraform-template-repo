@@ -52,10 +52,18 @@ jobs:
     steps:
       - name: Validate workflow status
         uses: LASER-Yi/workflow-status@v0.0.2
+        id: validate-modules-workflow-status
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           workflow: validate_modules.yaml
           branch: main
+          wait: true # wait until the validate-modules workflow has completed
+
+      - name: Check workflow status
+        if: validate-modules-workflow-status.conclusion == 'failure'
+        run: |
+          echo "Latest run of validate-modules was a failure"
+          exit 1
 
   select-environment:
     name: select-environment

@@ -49,4 +49,5 @@ module "network" {
     "snet-${local.suffix}-02" = "10.0.0.128/25"
     "snet-${local.suffix}-03" = "10.0.1.0/24"
   }
+  private_endpoint_network_policies_enabled = true
 }
