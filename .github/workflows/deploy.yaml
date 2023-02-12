@@ -50,7 +50,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           workflow: validate_modules.yaml
           branch: main
-          wait: true
 
       - name: Check workflow status
         if: steps.validate-modules-workflow-status.conclusion == 'failure'
