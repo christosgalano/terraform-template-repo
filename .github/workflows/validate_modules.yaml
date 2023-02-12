@@ -147,10 +147,10 @@ jobs:
               })
             }
 
-      - name: Check tfsec status
+      - name: Failed tfsec status
         if: steps.tfsec.outcome == 'failure'
         run: exit 1
 
-      - name: Check terraform status
+      - name: Failed terraform status
         if: steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure' || steps.validate.outcome == 'failure'
         run: exit 1

@@ -274,11 +274,11 @@ jobs:
         if: steps.update-pr.outputs.result == 'true'
         run: printf "### Terraform plan for ${{ matrix.environment }}📖 \`${{ steps.plan.outcome }}\`\n\`\`\`hcl\n${{ steps.plan.outputs.stdout }}\`\`\`" >> $GITHUB_STEP_SUMMARY
 
-      - name: Check tfsec status
+      - name: Failed tfsec status
         if: steps.tfsec.outcome == 'failure'
         run: exit 1
 
-      - name: Check terraform status
+      - name: Failed terraform status
         if: steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure' || steps.validate.outcome == 'failure'
         run: exit 1
 
