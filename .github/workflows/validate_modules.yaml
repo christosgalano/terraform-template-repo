@@ -179,9 +179,6 @@ jobs:
               body: output
             })
 
-      - name: Echo checkov
-        run: echo ${{ steps.checkov.outputs.results }}
-
       - name: Test sarifs 1
         working-directory: ${{ env.TERRAFORM_MODULES_DIR }}/${{ matrix.module }}
         run: ls -al *.sarif
