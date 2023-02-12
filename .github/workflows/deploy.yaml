@@ -49,7 +49,16 @@ jobs:
   validate-modules:
     name: validate-modules-workflow-status
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
     steps:
+      - uses: jsok/serialize-workflow-action@v1
+        with:
+          workflow: validate-modules
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Validate workflow status
         uses: LASER-Yi/workflow-status@v0.1.0
         id: validate-modules-workflow-status
