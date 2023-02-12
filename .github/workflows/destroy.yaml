@@ -38,7 +38,6 @@ jobs:
     name: destroy
     needs: approve
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
     permissions:
       id-token: write
       contents: read
