@@ -60,7 +60,7 @@ jobs:
           wait: true # wait until the validate-modules workflow has completed
 
       - name: Check workflow status
-        if: validate-modules-workflow-status.conclusion == 'failure'
+        if: steps.validate-modules-workflow-status.conclusion == 'failure'
         run: |
           echo "Latest run of validate-modules was a failure"
           exit 1
