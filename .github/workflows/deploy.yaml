@@ -104,7 +104,7 @@ jobs:
             environments+=("staging")
           fi
           if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
-            environment+=("production")
+            environments+=("production")
           fi
           environments_json=$(jq -c -n '$ARGS.positional' --args "${environments[@]}")
           echo "Selected environments: $environments_json"
@@ -174,7 +174,9 @@ jobs:
       - name: Terraform plan
         id: plan
         run: |
-          terraform plan -out=${{ matrix.environment }}.tf \
+          terraform plan \
+            -no-color -input=false \
+            -out=${{ matrix.environment }}.tfplan \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
             -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
@@ -183,18 +185,30 @@ jobs:
       - name: Update pull request
         uses: actions/github-script@v6
         if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        id: update-pr
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          result-encoding: string
           script: |
-            const output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('${{ matrix.environment }}')
+            })
+
+            // 2. Prepare format of the comment
+            var character_limit_reached = "false"
+            var output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
             #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
             #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
             <details><summary>Validation Output</summary>
 
-            \`\`\`\n
+            \`\`\`hcl
             ${{ steps.validate.outputs.stdout }}
             \`\`\`
 
@@ -204,20 +218,61 @@ jobs:
 
             <details><summary>Show Plan</summary>
 
-            \`\`\`\n
-            ${process.env.PLAN}
+            \`\`\`hcl
+            ${{ steps.plan.outputs.stdout }}
             \`\`\`
 
             </details>
 
             *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+            // 3. Check if character limit was reached and update accordingly
+            if (output.length > 65536) {
+              character_limit_reached = "true"
+              output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
+              #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+              #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+              #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+              <details><summary>Validation Output</summary>
+              
+              \`\`\`hcl
+              ${{ steps.validate.outputs.stdout }}
+              \`\`\`
+              
+              </details>
+              
+              #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+              
+              <details><summary>Show Plan</summary>
+              Terraform plan's output was too big to fit in a PR comment. You can find it <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">here</a>.
+              
+              </details>
+              
+              *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            }
+
+            // 4. If we have a comment, update it, otherwise create a new one
+            if (botComment) {
+              github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: output
+              })
+            } else {
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: output
+              })
+            }
+
+            return character_limit_reached
+
+      - name: Terraform plan summary
+        if: steps.update-pr.outputs.result == 'true'
+        run: printf "### Terraform plan for ${{ matrix.environment }}📖 \`${{ steps.plan.outcome }}\`\n\`\`\`hcl\n${{ steps.plan.outputs.stdout }}\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Check tfsec status
         if: steps.tfsec.outcome == 'failure'
@@ -231,7 +286,8 @@ jobs:
         if: inputs.tf_apply || (github.ref == 'refs/heads/main' && github.event_name == 'push')
         id: apply
         run: |
-          terraform apply ${{ matrix.environment }}.tf \
+          terraform apply \
+            ${{ matrix.environment }}.tfplan \
             -no-color -auto-approve \
             -var="client_id=${{ secrets.CLIENT_ID }}" \
             -var="tenant_id=${{ secrets.TENANT_ID }}" \
