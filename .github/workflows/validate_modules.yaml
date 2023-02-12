@@ -194,7 +194,7 @@ jobs:
         uses: actions/upload-artifact@v3
         if: success() || failure()
         with:
-          name: reports
+          name: ${{ matrix.module }}_scan_results
           path: ${{ env.REPORTS_DIR }}
           retention-days: 10
 
