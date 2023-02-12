@@ -65,12 +65,12 @@ jobs:
           echo "Latest run of validate-modules was a failure"
           exit 1
 
-  select-environment:
-    name: select-environment
+  select-environments:
+    name: select-environments
     needs: validate-modules
     runs-on: ubuntu-latest
     outputs:
-      environment: ${{ steps.select-environment.outputs.environment || inputs.environment }}
+      environments: ${{ steps.select-environments.outputs.environments || steps.provided-environment.outputs.environment }}
     defaults:
       run:
         shell: bash
@@ -92,34 +92,47 @@ jobs:
             production:
               - '**/production/**'
 
-      # Deployments to multiple environments simultaneously is not allowed.
-      # The deployment priority is as follows:
-      # 1. Changes to production  files  ->  deploy to production
-      # 2. Changes to staging     files  ->  deploy to staging
-      # 3. Changes to development files  ->  deploy to development
-      - name: Select deployment environment
+      - name: Select environments
         if: github.event_name == 'push' || github.event_name == 'pull_request'
-        id: select-environment
+        id: select-environments
         run: |
-          environment=""
-          if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
-            environment="production"
-          elif [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
-            environment="staging"
-          elif [ "${{ steps.filter.outputs.development }}" == "true" ]; then
-            environment="development"
-          else
-            echo "Error finding changes to terraform files"
-            exit 1
+          environments=()
+          if [ "${{ steps.filter.outputs.development }}" == "true" ]; then
+            environments+=("development")
           fi
-          echo "Selected the $environment environment" 
-          echo "environment=$environment" >> $GITHUB_OUTPUT
+          if [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
+            environments+=("staging")
+          fi
+          if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
+            environment+=("production")
+          fi
+          environments_json=$(jq -c -n '$ARGS.positional' --args "${environments[@]}")
+          echo "Selected environments: $environments_json"
+          echo "environments=$environments_json" >> $GITHUB_OUTPUT
+
+      - name: Provided environment
+        if: github.event_name == 'workflow_dispatch'
+        id: provided-environment
+        run: |
+          environment_json=$(jq -c -n '$ARGS.positional' --args "${{ inputs.environment }}")
+          echo "Selected environment: $environment_json"
+          echo "environment=$environment_json" >> $GITHUB_OUTPUT
 
   deploy:
-    name: deploy
-    needs: select-environment
+    name: deploy-to-${{ matrix.environment }}
+    needs: select-environments
     runs-on: ubuntu-latest
-    environment: ${{ needs.select-environment.outputs.environment }}
+    environment: ${{ matrix.environment }}
+
+    # The flow of execution is the following:
+    # 1. Deploy to the development environment (if changes were made to terraform/environments/development)
+    # 2. Deploy to the staging     environment (if changes were made to terraform/environments/staging    and the development deployment completed successfully)
+    # 3. Deploy to the production  environment (if changes were made to terraform/environments/production and the staging     deployment completed successfully)
+    strategy:
+      max-parallel: 1
+      fail-fast: true
+      matrix:
+        environment: ${{ fromJson(needs.select-environments.outputs.environments) }}
     env:
       ENVIRONMENT: ${{ needs.select-environment.outputs.environment }}
     defaults:
