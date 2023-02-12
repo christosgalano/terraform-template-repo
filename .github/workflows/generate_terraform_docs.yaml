@@ -13,6 +13,7 @@ env:
   TERRAFORM_DIR: ${{ github.workspace }}/terraform
 
 jobs:
+  # Generate Terraform documentation for each module.
   generate-terraform-docs:
     name: generate-terraform-docs
     runs-on: ubuntu-latest
@@ -27,6 +28,5 @@ jobs:
         with:
           find-dir: ${{ env.TERRAFORM_DIR }}/
           config-file: .terraform-docs.yaml
-          # args: "--config /github/workspace/terraform/.terraform-docs.yaml"
           output-method: replace
           git-push: "true"
