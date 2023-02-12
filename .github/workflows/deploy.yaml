@@ -58,14 +58,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          sleep 5
           status=$(gh run list --workflow validate_modules.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
           echo "Current status: $status"
+
+          if [ "$status" != "in_progress" ]; then
+            sleep 5s
+            status=$(gh run list --workflow validate_modules.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
+            echo "Current status: $status"
+          fi
 
           while [ "$status" == "in_progress" ]; do
             status=$(gh run list --workflow validate_modules.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
             echo "Current status: $status"
-            sleep 2
+            sleep 2s
           done
 
           workflow_conclusion=$(gh run list --workflow test.yaml --limit 1 --repo ${{ github.repository }} | grep -oh "completed.*" | head -1 | awk '{print $2}')
