@@ -61,16 +61,10 @@ jobs:
           status=$(gh run list --workflow validate-modules --limit 1 --repo ${{ github.repository }} | awk '{print $1}')
           echo "Current validate-modules workflow status: $status"
 
-          if [ "$status" != "in_progress" ]; then
-            sleep 5s
-            status=$(gh run list --workflow validate-modules --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
+          while [ "$status" == "queued" ] || [ "$status" == "in_progress" ]; do
+            status=$(gh run list --workflow validate-modules --limit 1 --repo ${{ github.repository }} | awk '{print $1}')
             echo "Current validate-modules workflow status: $status"
-          fi
-
-          while [ "$status" == "in_progress" ]; do
-            status=$(gh run list --workflow validate-modules --repo ${{ github.repository }} | grep -oh "in_progress.*" | head -1 | awk '{print $1}')
-            echo "Current validate-modules workflow status: $status"
-            sleep 2s
+            sleep 3s
           done
 
           workflow_conclusion=$(gh run list --workflow validate-modules --repo ${{ github.repository }} | grep -oh "completed.*" | head -1 | awk '{print $2}')
