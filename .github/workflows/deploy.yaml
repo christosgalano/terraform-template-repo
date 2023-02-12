@@ -49,7 +49,6 @@ jobs:
   validate-modules:
     name: validate-modules-workflow-status
     runs-on: ubuntu-latest
-    timeout-minutes: 60
     defaults:
       run:
         shell: bash
