@@ -13,12 +13,10 @@ on:
     paths:
       - terraform/modules/**
   workflow_call:
-  workflow_dispatch:
 
-# Cancel in progress workflows.
 concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: true
+  group: validate-deploy-workflows
+  cancel-in-progress: false
 
 env:
   TERRAFORM_MODULES_DIR: ${{ github.workspace }}/terraform/modules

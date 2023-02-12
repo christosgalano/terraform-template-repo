@@ -24,16 +24,9 @@ on:
         required: true
         description: "Run `terraform apply`"
 
-# Cancel in progress workflows based on the following:
-# - if the trigger was push/pull_request
-# - if the trigger was workflow_dispatch and the environment is the same
-#
-# Simultaneous deployment is only allowed when its manually triggered and
-# targets different environments, otherwise the most recently trigger workflow
-# gets executed.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
-  cancel-in-progress: true
+  group: validate-deploy-workflows
+  cancel-in-progress: false
 
 permissions:
   actions: read
@@ -57,11 +50,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           workflow: validate_modules.yaml
           branch: main
+          wait: true
 
       - name: Check workflow status
-        if: steps.validate-modules-workflow-status.conclusion != 'success'
+        if: steps.validate-modules-workflow-status.conclusion == 'failure'
         run: |
-          echo "Latest run of validate-modules was not a success"
+          echo "Latest run of validate-modules was a failure"
           exit 1
 
   select-environment:
@@ -119,6 +113,12 @@ jobs:
     needs: select-environment
     runs-on: ubuntu-latest
     environment: ${{ needs.select-environment.outputs.environment }}
+
+    # Cancel in progress jobs/workflows that have the same environment
+    concurrency:
+      group: ${{ github.workflow }}-${{ needs.select-environment.outputs.environment }}
+      cancel-in-progress: true
+
     env:
       ENVIRONMENT: ${{ needs.select-environment.outputs.environment }}
       REPORTS_DIR: ${{ github.workspace }}/terraform/environments/${{ needs.select-environment.outputs.environment }}/reports
