@@ -2,16 +2,16 @@
 name: validate-modules
 run-name: ${{ github.workflow }}
 on:
-  # push:
-  #   branches:
-  #     - main
-  #   paths:
-  #     - terraform/modules/**
-  # pull_request:
-  #   branches:
-  #     - main
-  #   paths:
-  #     - terraform/modules/**
+  push:
+    branches:
+      - main
+    paths:
+      - terraform/modules/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - terraform/modules/**
   workflow_call:
   workflow_dispatch:
 

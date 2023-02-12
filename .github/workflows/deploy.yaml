@@ -50,21 +50,12 @@ jobs:
     name: validate-modules-workflow-status
     runs-on: ubuntu-latest
     steps:
-      # - name: Validate workflow status
-      #   uses: xembly/validate-workflow-status@v1
-      #   with:
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-      #     workflow: validate_modules
-      #     branch: main
-      #     status: success
-
       - name: Validate workflow status
         uses: LASER-Yi/workflow-status@v0.0.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           workflow: validate_modules.yaml
           branch: main
-          # event: push
 
   select-environment:
     name: select-environment
