@@ -41,9 +41,7 @@ output:
   file: "README.md"
   mode: replace
   template: |-
-    <!-- BEGIN_TF_DOCS -->
     {{ .Content }}
-    <!-- END_TF_DOCS -->
 
 sort:
   enabled: true
