@@ -57,12 +57,11 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           workflow: validate_modules.yaml
           branch: main
-          wait: true # wait until the validate-modules workflow has completed
 
       - name: Check workflow status
-        if: steps.validate-modules-workflow-status.conclusion == 'failure'
+        if: steps.validate-modules-workflow-status.conclusion != 'success'
         run: |
-          echo "Latest run of validate-modules was a failure"
+          echo "Latest run of validate-modules was not a success"
           exit 1
 
   select-environment:
