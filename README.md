@@ -1,4 +1,4 @@
-# terraform-library
+# terraform-template-repo
 
 [![deploy](https://github.com/christosgalano/terraform-library/actions/workflows/deploy.yaml/badge.svg?branch=main)](https://github.com/christosgalano/terraform-library/actions/workflows/deploy.yaml)
 [![destroy](https://github.com/christosgalano/terraform-library/actions/workflows/destroy.yaml/badge.svg?branch=main)](https://github.com/christosgalano/terraform-library/actions/workflows/destroy.yaml)
