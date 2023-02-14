@@ -17,7 +17,7 @@ on:
         type: boolean
         default: false
         required: true
-        description: "Perform a noop (no operation)"
+        description: "Set noop (no operations) mode"
 
 # Cancel in progress workflows based on the following criteria:
 # - if the trigger was pull_request
