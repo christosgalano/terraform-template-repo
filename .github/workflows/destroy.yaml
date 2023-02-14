@@ -21,7 +21,6 @@ jobs:
   approve:
     name: approve-infra-teardown
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }} # set environment - easier for OIDC management
     permissions:
       issues: write
     steps:
@@ -39,6 +38,7 @@ jobs:
     name: destroy
     needs: approve
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }} # set environment - easier for OIDC management
     permissions:
       id-token: write
       contents: read
