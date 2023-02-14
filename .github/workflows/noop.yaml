@@ -3,6 +3,8 @@ name: noop # from no operations
 run-name: ${{ github.workflow }}
 on:
   pull_request:
+    branches:
+      - main
     paths-ignore:
       - "terraform/**"
 
