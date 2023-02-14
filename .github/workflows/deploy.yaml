@@ -296,7 +296,7 @@ jobs:
       - name: Terraform apply
         if: github.event_name == 'pull_request' || !inputs.noop # branch deploy strategy
         id: apply
-        run: terraform apply ${{ matrix.environment }}.tfplan
+        run: terraform apply ${{ matrix.environment }}.tfplan -no-color
         continue-on-error: true
 
       - name: Update pull request - 2
@@ -416,21 +416,15 @@ jobs:
           "#### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`" \
           "#### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`" \
           "<details><summary>Validation Output</summary>" \
-          "\`\`\`" \
-          "${{ steps.validate.outputs.stdout }}" \
-          "\`\`\`" \
+          "\`\`\`${{ steps.validate.outputs.stdout }}\`\`\`" \
           "</details>" \
           "#### Terraform Plan 📖\`${{ steps.plan.outcome }}\`" \
           "<details><summary>Show Plan</summary>" \
-          "\`\`\`" \
-          "${{ steps.plan.outputs.stdout }}" \
-          "\`\`\`" \
+          "\`\`\`${{ steps.plan.outputs.stdout }}\`\`\`" \
           "</details>" \
           "#### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`" \
           "<details><summary>Apply Output</summary>" \
-          "\`\`\`" \
-          "${{ steps.apply.outputs.stdout }}" \
-          "\`\`\`" \
+          "\`\`\`${{ steps.apply.outputs.stdout }}\`\`\`" \
           "</details>" >> $GITHUB_STEP_SUMMARY
 
       - name: Failed terraform apply status
