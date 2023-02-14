@@ -431,4 +431,6 @@ jobs:
   generate-terraform-docs:
     name: generate-terraform-docs
     needs: deploy
+    permissions:
+      contents: write
     uses: ./.github/workflows/generate_terraform_docs.yaml
