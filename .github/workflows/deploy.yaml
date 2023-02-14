@@ -49,6 +49,9 @@ jobs:
     name: select-environments
     needs: validate-modules
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       environments: ${{ steps.select-environments.outputs.environments || steps.provided-environment.outputs.environment }}
     steps:
