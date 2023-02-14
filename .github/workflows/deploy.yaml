@@ -262,7 +262,7 @@ jobs:
       - name: Terraform actions summary
         if: |
           (steps.tfsec.outcome == 'failure' || steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure'
-           || steps.validate.outcome == 'failure' || || steps.plan.outcome == 'failure')
+          || steps.validate.outcome == 'failure' || steps.plan.outcome == 'failure')
           || (github.event_name == 'workflow_dispatch' && inputs.noop)
         run: |
           printf "%s\n" \
