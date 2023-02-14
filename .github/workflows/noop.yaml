@@ -15,4 +15,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print message
-        run: echo "No deployment required"
+        run: echo "noop workflow; no deployment required"
