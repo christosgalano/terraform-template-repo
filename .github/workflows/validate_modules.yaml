@@ -2,27 +2,12 @@
 name: validate-modules
 run-name: ${{ github.workflow }}
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - terraform/modules/**
-  pull_request:
-    branches:
-      - main
-    paths:
-      - terraform/modules/**
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
-
-permissions:
-  actions: read
-  contents: read
-  id-token: write
-  pull-requests: write
 
 env:
   TERRAFORM_REL_MOD_DIR: terraform/modules
@@ -76,84 +61,20 @@ jobs:
 
       - name: Run tfsec
         uses: aquasecurity/tfsec-action@v1.0.3
-        id: tfsec
         with:
           working_directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}/${{ matrix.module }}
           soft_fail: false
           additional_args: "--concise-output"
           github_token: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
 
       - name: Terraform fmt
         working-directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}/${{ matrix.module }}
-        id: fmt
         run: terraform fmt -check
-        continue-on-error: true
 
       - name: Terraform init
         working-directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}/${{ matrix.module }}/validate
-        id: init
         run: terraform init
-        continue-on-error: true
 
       - name: Terraform validate
         working-directory: ${{ env.TERRAFORM_ABS_MOD_DIR }}/${{ matrix.module }}/validate
-        id: validate
         run: terraform validate -no-color
-        continue-on-error: true
-
-      - uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            // 1. Retrieve existing bot comments for the PR
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            })
-            const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('${{ matrix.module }}')
-            })
-
-            // 2. Prepare format of the comment            
-            const output = `## ${{ matrix.module }} module
-            #### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
-            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
-
-            \`\`\`hcl
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_MOD_DIR }}/${{ matrix.module }}\`, Workflow: \`${{ github.workflow }}\`*`;
-
-            // 3. If we have a comment, update it, otherwise create a new one
-            if (botComment) {
-              github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: output
-              })
-            } else {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: output
-              })
-            }
-
-      - name: Failed tfsec status
-        if: steps.tfsec.outcome == 'failure'
-        run: exit 1
-
-      - name: Failed terraform status
-        if: steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure' || steps.validate.outcome == 'failure'
-        run: exit 1

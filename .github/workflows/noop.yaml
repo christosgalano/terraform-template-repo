@@ -1,0 +1,19 @@
+# This workflow is used to bypass the "required status check" branch protection rule for the job "deploy".
+name: deploy # it is noop because it performs no operations
+run-name: ${{ github.workflow }}
+on:
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - "terraform/**"
+
+jobs:
+  # So, if we make some changes to the repository that do not modify the "terraform" directory, then we are good
+  # to merge our pull request.
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print message
+        run: echo "noop workflow; no deployment required"
