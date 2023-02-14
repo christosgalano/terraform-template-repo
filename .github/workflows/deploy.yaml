@@ -426,3 +426,9 @@ jobs:
       - name: Failed terraform apply status
         if: steps.apply.outcome == 'failure'
         run: exit 1
+
+  # Call the generate-terraform-docs workflow.
+  generate-terraform-docs:
+    name: generate-terraform-docs
+    needs: deploy
+    uses: ./.github/workflows/generate_terraform_docs.yaml
