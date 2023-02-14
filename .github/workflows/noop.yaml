@@ -1,5 +1,5 @@
 # This workflow is used to bypass the "required status check" branch protection rule for the job "deploy".
-name: noop # from no operations
+name: deploy # it is noop because it performs no operations
 run-name: ${{ github.workflow }}
 on:
   pull_request:
