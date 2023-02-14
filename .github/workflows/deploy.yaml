@@ -205,7 +205,7 @@ jobs:
 
             #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
 
-            <details><summary>Show Plan</summary>
+            <details><summary>Plan Output</summary>
 
             \`\`\`hcl
             ${{ steps.plan.outputs.stdout }}
@@ -232,7 +232,7 @@ jobs:
               
               #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
               
-              <details><summary>Show Plan</summary>
+              <details><summary>Plan Output</summary>
               Terraform plan's output was too big to fit in a PR comment. You can find it <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">here</a>.
               
               </details>
@@ -262,26 +262,22 @@ jobs:
       - name: Terraform actions summary
         if: |
           (steps.tfsec.outcome == 'failure' || steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure'
-           || steps.validate.outcome == 'failure' || || steps.plan.outcome == 'failure')
+          || steps.validate.outcome == 'failure' || steps.plan.outcome == 'failure')
           || (github.event_name == 'workflow_dispatch' && inputs.noop)
         run: |
-          printf "%s\n" \
-          "## Terraform actions summary for ${{ matrix.environment }}" \
-          "#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`" \
-          "#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`" \
-          "#### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`" \
-          "#### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`" \
-          "<details><summary>Validation Output</summary>" \
-          "\`\`\`hcl" \
-          "${{ steps.validate.outputs.stdout }}" \
-          "\`\`\`" \
-          "</details>" \
-          "#### Terraform Plan 📖\`${{ steps.plan.outcome }}\`" \
-          "<details><summary>Show Plan</summary>" \
-          "\`\`\`hcl" \
-          "${{ steps.plan.outputs.stdout }}" \
-          "\`\`\`" \
-          "</details>" >> $GITHUB_STEP_SUMMARY
+          summary="## Terraform actions summary for ${{ matrix.environment }}\n
+          #### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`\n
+          #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`\n
+          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`\n
+          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`\n
+          <details><summary>Validation Output</summary>\n
+          \`\`\`hcl\n${{ steps.validate.outputs.stdout }}\`\`\`\n
+          </details>\n
+          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`\n
+          <details><summary>Plan Output</summary>\n
+          \`\`\`hcl\n${{ steps.plan.outputs.stdout }}\`\`\`\n
+          </details>\n"
+          printf "$summary" >> $GITHUB_STEP_SUMMARY
 
       - name: Failed tfsec status
         if: steps.tfsec.outcome == 'failure'
@@ -296,7 +292,7 @@ jobs:
       - name: Terraform apply
         if: github.event_name == 'pull_request' || !inputs.noop # branch deploy strategy
         id: apply
-        run: terraform apply ${{ matrix.environment }}.tfplan
+        run: terraform apply ${{ matrix.environment }}.tfplan -no-color
         continue-on-error: true
 
       - name: Update pull request - 2
@@ -332,7 +328,7 @@ jobs:
 
             #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
 
-            <details><summary>Show Plan</summary>
+            <details><summary>Plan Output</summary>
 
             \`\`\`hcl
             ${{ steps.plan.outputs.stdout }}
@@ -369,7 +365,7 @@ jobs:
               
               #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
               
-              <details><summary>Show Plan</summary>
+              <details><summary>Plan Output</summary>
               Terraform plan's output was too big to fit in a PR comment. You can find it <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">here</a>.
               
               </details>
@@ -409,29 +405,23 @@ jobs:
       - name: Terraform actions summary
         if: github.event_name == 'pull_request' || !inputs.noop
         run: |
-          printf "%s\n" \
-          "## Terraform actions summary for ${{ matrix.environment }}" \
-          "#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`" \
-          "#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`" \
-          "#### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`" \
-          "#### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`" \
-          "<details><summary>Validation Output</summary>" \
-          "\`\`\`hcl" \
-          "${{ steps.validate.outputs.stdout }}" \
-          "\`\`\`" \
-          "</details>" \
-          "#### Terraform Plan 📖\`${{ steps.plan.outcome }}\`" \
-          "<details><summary>Show Plan</summary>" \
-          "\`\`\`hcl" \
-          "${{ steps.plan.outputs.stdout }}" \
-          "\`\`\`" \
-          "</details>" \
-          "#### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`" \
-          "<details><summary>Apply Output</summary>" \
-          "\`\`\`hcl" \
-          "${{ steps.apply.outputs.stdout }}" \
-          "\`\`\`" \
-          "</details>" >> $GITHUB_STEP_SUMMARY
+          summary="## Terraform actions summary for ${{ matrix.environment }}\n
+          #### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`\n
+          #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`\n
+          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`\n
+          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`\n
+          <details><summary>Validation Output</summary>\n
+          \`\`\`hcl\n${{ steps.validate.outputs.stdout }}\`\`\`\n
+          </details>\n
+          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`\n
+          <details><summary>Plan Output</summary>\n
+          \`\`\`hcl\n${{ steps.plan.outputs.stdout }}\`\`\`\n
+          </details>\n
+          #### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`\n
+          <details><summary>Apply Output</summary>\n
+          \`\`\`hcl\n${{ steps.apply.outputs.stdout }}\`\`\`\n
+          </details>\n"
+          printf "$summary" >> $GITHUB_STEP_SUMMARY
 
       - name: Failed terraform apply status
         if: steps.apply.outcome == 'failure'
