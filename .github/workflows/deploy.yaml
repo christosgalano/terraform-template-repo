@@ -109,7 +109,7 @@ jobs:
   # 2. Deploy to the staging environment (if the staging environment was selected and the development deployment was completed successfully).
   # 3. Deploy to the production environment (if the production environment was selected and the staging deployment was successful).
   deploy:
-    name: deploy-to-${{ matrix.environment }}
+    name: deploy
     needs: select-environments
     runs-on: ubuntu-latest
     environment: ${{ matrix.environment }}
@@ -261,7 +261,8 @@ jobs:
 
       - name: Terraform actions summary
         if: |
-          (steps.tfsec.outcome == 'failure' || steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure' || steps.validate.outcome == 'failure')
+          (steps.tfsec.outcome == 'failure' || steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure'
+           || steps.validate.outcome == 'failure' || || steps.plan.outcome == 'failure')
           || (github.event_name == 'workflow_dispatch' && inputs.noop)
         run: |
           printf "%s\n" \
@@ -287,7 +288,9 @@ jobs:
         run: exit 1
 
       - name: Failed terraform status
-        if: steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure' || steps.validate.outcome == 'failure'
+        if: |
+          steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure'
+          || steps.validate.outcome == 'failure' || steps.plan.outcome == 'failure'
         run: exit 1
 
       - name: Terraform apply
