@@ -415,15 +415,15 @@ jobs:
           #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`\n
           #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`\n
           <details><summary>Validation Output</summary>\n
-          \`\`\`\n${{ steps.validate.outputs.stdout }}\n\`\`\`\n
+          \`\`\`hcl\n${{ steps.validate.outputs.stdout }}\`\`\`\n
           </details>\n
           #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`\n
           <details><summary>Show Plan</summary>\n
-          \`\`\`\n${{ steps.plan.outputs.stdout }}\n\`\`\`\n
+          \`\`\`hcl\n${{ steps.plan.outputs.stdout }}\`\`\`\n
           </details>\n
           #### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`\n
           <details><summary>Apply Output</summary>\n
-          \`\`\`\n${{ steps.apply.outputs.stdout }}\n\`\`\`\n
+          \`\`\`hcl\n${{ steps.apply.outputs.stdout }}\`\`\`\n
           </details>\n"
           printf "$summary" >> $GITHUB_STEP_SUMMARY
 
