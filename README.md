@@ -5,7 +5,7 @@
 [![validate-modules](https://github.com/christosgalano/terraform-template-repo/actions/workflows/validate_modules.yaml/badge.svg?branch=main)](https://github.com/christosgalano/terraform-library/actions/workflows/validate_modules.yaml)
 [![generate-terraform-docs](https://github.com/christosgalano/terraform-template-repo/actions/workflows/generate_terraform_docs.yaml/badge.svg?branch=main)](https://github.com/christosgalano/terraform-library/actions/workflows/generate_terraform_docs.yaml)
 
-<!-- TODO: add documentation about the workflows and their usage and also give example of flow with pr and the push or workflow dispatch -->
+<!-- TODO: add documentation about the workflows and their usage and also give example of flow with branch-deploy strategy -->
 
 ## General
 
