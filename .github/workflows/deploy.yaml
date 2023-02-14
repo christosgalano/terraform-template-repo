@@ -416,15 +416,21 @@ jobs:
           "#### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`" \
           "#### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`" \
           "<details><summary>Validation Output</summary>" \
-          "`${{ steps.validate.outputs.stdout }}`" \
+          "\`\`\`bash" \
+          "${{ steps.validate.outputs.stdout }}" \
+          "\`\`\`" \
           "</details>" \
           "#### Terraform Plan 📖\`${{ steps.plan.outcome }}\`" \
           "<details><summary>Show Plan</summary>" \
-          "```${{ steps.plan.outputs.stdout }}```" \
+          "\`\`\`bash" \
+          "${{ steps.plan.outputs.stdout }}" \
+          "\`\`\`" \
           "</details>" \
           "#### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`" \
           "<details><summary>Apply Output</summary>" \
-          "\`\`\`${{ steps.apply.outputs.stdout }}\`\`\`" \
+          "\`\`\`bash" \
+          "${{ steps.apply.outputs.stdout }}"
+          "\`\`\`" \
           "</details>" >> $GITHUB_STEP_SUMMARY
 
       - name: Failed terraform apply status
