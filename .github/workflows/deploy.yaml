@@ -409,30 +409,47 @@ jobs:
       - name: Terraform actions summary
         if: github.event_name == 'pull_request' || !inputs.noop
         run: |
-          printf "%s\n" \
-          "## Terraform actions summary for ${{ matrix.environment }}" \
-          "#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`" \
-          "#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`" \
-          "#### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`" \
-          "#### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`" \
-          "<details><summary>Validation Output</summary>" \
-          "\`\`\`" \
-          "${{ steps.validate.outputs.stdout }}" \
-          "\`\`\`" \
-          "</details>" \
-          "#### Terraform Plan 📖\`${{ steps.plan.outcome }}\`" \
-          "<details><summary>Show Plan</summary>" \
-          "\`\`\`" \
-          "${{ steps.plan.outputs.stdout }}" \
-          "\`\`\`" \
-          "</details>" \
-          "#### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`" \
-          "<details><summary>Apply Output</summary>" \
-          "\`\`\`" \
-          "${{ steps.apply.outputs.stdout }}" \
-          "\`\`\`" \
-          "</details>" >> $GITHUB_STEP_SUMMARY
+          summary="## Terraform actions summary for ${{ matrix.environment }}\n
+          #### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`\n
+          #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`\n
+          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`\n
+          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`\n
+          <details><summary>Validation Output</summary>\n
+          \`\`\`\n${{ steps.validate.outputs.stdout }}\n\`\`\`\n
+          </details>\n
+          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`\n
+          <details><summary>Show Plan</summary>\n
+          \`\`\`\n${{ steps.plan.outputs.stdout }}\n\`\`\`\n
+          </details>\n
+          #### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`\n
+          <details><summary>Apply Output</summary>\n
+          \`\`\`\n${{ steps.apply.outputs.stdout }}\n\`\`\`\n
+          </details>\n"
+          printf "$summary" >> $GITHUB_STEP_SUMMARY
 
       - name: Failed terraform apply status
         if: steps.apply.outcome == 'failure'
         run: exit 1
+# printf "%s\n" \
+# "## Terraform actions summary for ${{ matrix.environment }}" \
+# "#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`" \
+# "#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`" \
+# "#### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`" \
+# "#### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`" \
+# "<details><summary>Validation Output</summary>" \
+# "\`\`\`" \
+# "${{ steps.validate.outputs.stdout }}" \
+# "\`\`\`" \
+# "</details>" \
+# "#### Terraform Plan 📖\`${{ steps.plan.outcome }}\`" \
+# "<details><summary>Show Plan</summary>" \
+# "\`\`\`" \
+# "${{ steps.plan.outputs.stdout }}" \
+# "\`\`\`" \
+# "</details>" \
+# "#### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`" \
+# "<details><summary>Apply Output</summary>" \
+# "\`\`\`" \
+# "${{ steps.apply.outputs.stdout }}" \
+# "\`\`\`" \
+# "</details>" >> $GITHUB_STEP_SUMMARY
