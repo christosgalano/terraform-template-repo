@@ -429,7 +429,7 @@ jobs:
           "#### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`" \
           "<details><summary>Apply Output</summary>" \
           "\`\`\`bash" \
-          "${{ steps.apply.outputs.stdout }}"
+          "${{ steps.apply.outputs.stdout }}" \
           "\`\`\`" \
           "</details>" >> $GITHUB_STEP_SUMMARY
 
