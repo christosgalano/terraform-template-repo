@@ -24,8 +24,3 @@ resource "azurerm_resource_group" "rg" {
     ]
   }
 }
-
-module "sample_module" {
-  source = "../../modules/sample_module"
-}
-
