@@ -2,11 +2,7 @@
 name: generate-terraform-docs
 run-name: ${{ github.workflow }}
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - terraform/**
+  workflow_call:
   workflow_dispatch:
 
 env:
