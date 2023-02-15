@@ -8,6 +8,10 @@ on:
     paths-ignore:
       - "terraform/**"
 
+concurrency:
+  group: noop
+  cancel-in-progress: true
+
 jobs:
   # So, if we make some changes to the repository that do not modify the "terraform" directory, then we are good
   # to merge our pull request.

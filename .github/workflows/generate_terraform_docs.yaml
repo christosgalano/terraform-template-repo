@@ -5,6 +5,10 @@ on:
   workflow_call:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
 env:
   TERRAFORM_DIR: ${{ github.workspace }}/terraform
 
