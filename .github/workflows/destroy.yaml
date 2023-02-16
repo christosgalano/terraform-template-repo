@@ -28,8 +28,8 @@ jobs:
         uses: trstringer/manual-approval@v1.8.0
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: christosgalano
-          minimum-approvals: 1
+          approvers: user1,user2,..,userN
+          minimum-approvals: 1,2,..,N
           issue-title: "Approve infrastructure teardown for the ${{ inputs.environment }} environment"
           exclude-workflow-initiator-as-approver: false
 
