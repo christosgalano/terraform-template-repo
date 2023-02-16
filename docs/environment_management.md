@@ -21,7 +21,7 @@ Create a directory with the name of the environment in `terraform/environments`.
  ┗ 📜variables.tf
 ```
 
-You can copy the `.terraform-docs.yaml` from an existing environment, it requires no modifications. You can also skep the creation of the README.md since it will be automatically generated when they `deploy` workflow runs.
+You can copy the `.terraform-docs.yaml` from an existing environment, it requires no modifications. You can also skip the creation of the `README.md` since it will be automatically generated when they `deploy` workflow runs.
 
 ### Workflow
 

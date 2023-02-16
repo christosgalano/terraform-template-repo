@@ -42,14 +42,14 @@ flowchart LR
   
     ```mermaid
     flowchart LR
-        development --> staging --> production
+        development --> |success| staging --> |success| production
     ```
 
     At least one environment is chosen, but there are no limitations to the combinations (for example we could deploy to development and production based on the changes made). Then the execution flow would be the following:
 
     ```mermaid
     flowchart LR
-        development --> production
+        development --> |success| production
     ```
 
     One important thing to take notice of is the option `fast-fail: true`. This means that if the deployment to the development environment fails, then the whole deploy workflow fails before we make possibly harming changes to the staging or the production environment. The same thing applies if the deployment to the staging environment fails, so we avoid to make possibly harming changes to the production environment.
@@ -82,7 +82,7 @@ This workflow consists of 2 jobs which execute in a serial manner:
 
 ```mermaid
 flowchart LR
-    approve --> destroy
+    approve --> |approved| destroy
 ```
 
 This workflow destroys our environment's infrastructure after getting an approval from a specific user through a manually-created issue. The environment to be destroyed must be specified when triggering the workflow.
@@ -121,7 +121,7 @@ flowchart LR
     select-modules --> validate-module
 ```
 
-1. ``select-modules`:  selects all modules in the terraform/modules directory and exports them as a JSON array. This JSON array is passed to the second job as a matrix.
+1. `select-modules`:  selects all modules in the terraform/modules directory and exports them as a JSON array. This JSON array is passed to the second job as a matrix.
 
 2. `validate-module`: validates each module in the JSON array. Each module is validated in a separate matrix job. This job has a `max-parallel` strategy of 5, which means that up to 5 matrix jobs can run in parallel. The `fail-fast` strategy is set to false, which means that if one or more matrix jobs fail, the rest will carry on normally and won't be canceled.
 
