@@ -5,7 +5,3 @@ locals {
     environment = var.environment
   }
 }
-
-locals {
-  suffix_clean = replace(local.suffix, "-", "")
-}

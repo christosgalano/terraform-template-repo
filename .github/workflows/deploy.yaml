@@ -431,6 +431,5 @@ jobs:
     needs: deploy
     permissions:
       contents: write
+      pull-requests: read
     uses: ./.github/workflows/generate_terraform_docs.yaml
-    with:
-      head_ref: ${{ github.event.pull_request.head.ref }} # falls to default value if trigger was workflow_dispatch
