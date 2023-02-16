@@ -33,7 +33,7 @@ jobs:
         if: github.event_name == 'workflow_call'
         uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.head_ref }}
+          ref: ${{ inputs.ref }}
 
       - name: Generate Terraform documentation
         uses: terraform-docs/gh-actions@v1.0.0
