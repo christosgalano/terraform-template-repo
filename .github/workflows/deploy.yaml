@@ -435,3 +435,5 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/generate_terraform_docs.yaml
+    with:
+      pr_head_ref: ${{ github.event.pull_request.head.ref }}
