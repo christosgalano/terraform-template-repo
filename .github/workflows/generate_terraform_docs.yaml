@@ -16,7 +16,6 @@ jobs:
   # Generate Terraform documentation for each module.
   generate-terraform-docs:
     name: generate-terraform-docs
-    needs: deploy
     runs-on: ubuntu-latest
     permissions:
       contents: write
