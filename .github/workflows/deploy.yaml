@@ -1,4 +1,5 @@
-# This workflow makes sure our Terraform modules are valid, selects our deployment's environment(s), and then deploys our Terraform code.
+# This workflow makes sure our Terraform modules are valid, selects our deployment's environment(s),
+# deploys our Terraform code and then generates documentation for each Terraform module.
 name: deploy
 run-name: ${{ github.workflow }}
 on:
