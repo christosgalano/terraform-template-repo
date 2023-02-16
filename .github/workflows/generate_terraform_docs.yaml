@@ -23,6 +23,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
+          # Two cases based on triggers:
+          # - on workflow_call it inherits the ref from the caller workflow
+          # - on workflow_dispatch it falls back to the default value (the branch)
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Generate Terraform documentation
