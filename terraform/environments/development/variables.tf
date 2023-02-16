@@ -1,21 +1,3 @@
-variable "client_id" {
-  type        = string
-  sensitive   = true
-  description = "Client id of the service principal used for deployment with OIDC"
-}
-
-variable "tenant_id" {
-  type        = string
-  sensitive   = true
-  description = "Tenant id of the service principal used for deployment with OIDC"
-}
-
-variable "subscription_id" {
-  type        = string
-  sensitive   = true
-  description = "Subscription id of the service principal used for deployment with OIDC"
-}
-
 variable "workload" {
   type        = string
   description = "Name of the workload that will be deployed"
@@ -42,10 +24,4 @@ variable "location" {
 variable "location_abbreviation" {
   type        = string
   description = "Abbreviation of the location"
-}
-
-variable "rg_tags" {
-  type        = map(string)
-  default     = {}
-  description = "Tags to be applied on the resource groups"
 }

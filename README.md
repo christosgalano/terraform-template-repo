@@ -5,7 +5,7 @@
 
 ## General
 
-Template repository for Terraform projects including deployment to multiple environments.
+Template repository for Terraform projects regarding deployment to multiple environments.
 
 ## License
 

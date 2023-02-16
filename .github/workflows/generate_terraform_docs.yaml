@@ -4,10 +4,10 @@ run-name: ${{ github.workflow }}
 on:
   workflow_call:
     inputs:
-      pr_head_ref:
+      head_ref:
         type: string
         required: true
-        description: "Head ref of the pull request that triggered the caller workflow"
+        description: "Head ref to pull and push to"
   workflow_dispatch:
 
 concurrency:
@@ -33,7 +33,7 @@ jobs:
         if: github.event_name == 'workflow_call'
         uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.pr_head_ref }}
+          ref: ${{ inputs.head_ref }}
 
       - name: Generate Terraform documentation
         uses: terraform-docs/gh-actions@v1.0.0

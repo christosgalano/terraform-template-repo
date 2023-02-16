@@ -166,10 +166,7 @@ jobs:
         run: |
           terraform plan \
             -no-color -input=false \
-            -out=${{ matrix.environment }}.tfplan \
-            -var="client_id=${{ secrets.CLIENT_ID }}" \
-            -var="tenant_id=${{ secrets.TENANT_ID }}" \
-            -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
+            -out=${{ matrix.environment }}.tfplan
         continue-on-error: true
 
       - name: Update pull request - 1
@@ -436,4 +433,4 @@ jobs:
       contents: write
     uses: ./.github/workflows/generate_terraform_docs.yaml
     with:
-      pr_head_ref: ${{ github.event.pull_request.head.ref }}
+      head_ref: ${{ github.event.pull_request.head.ref }} # falls to default value if trigger was workflow_dispatch
