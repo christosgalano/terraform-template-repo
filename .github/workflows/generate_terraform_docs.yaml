@@ -25,15 +25,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout - branch
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/checkout@v3
-
-      - name: Checkout - pull request
-        if: github.event_name == 'deploy' # same as the caller workflow
+      - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref }} # if it has no value if falls back to the default
 
       - name: Generate Terraform documentation
         uses: terraform-docs/gh-actions@v1.0.0
