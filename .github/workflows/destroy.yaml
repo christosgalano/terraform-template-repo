@@ -59,8 +59,4 @@ jobs:
         run: terraform init
 
       - name: Terraform destroy
-        run: |
-          terraform apply -destroy -no-color -auto-approve \
-            -var="client_id=${{ secrets.CLIENT_ID }}" \
-            -var="tenant_id=${{ secrets.TENANT_ID }}" \
-            -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
+        run: terraform apply -destroy -no-color -auto-approve

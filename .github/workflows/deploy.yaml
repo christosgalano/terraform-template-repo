@@ -166,10 +166,7 @@ jobs:
         run: |
           terraform plan \
             -no-color -input=false \
-            -out=${{ matrix.environment }}.tfplan \
-            -var="client_id=${{ secrets.CLIENT_ID }}" \
-            -var="tenant_id=${{ secrets.TENANT_ID }}" \
-            -var="subscription_id=${{ secrets.SUBSCRIPTION_ID }}"
+            -out=${{ matrix.environment }}.tfplan
         continue-on-error: true
 
       - name: Update pull request - 1
