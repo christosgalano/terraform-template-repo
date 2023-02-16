@@ -5,6 +5,7 @@ on:
   workflow_call:
     inputs:
       pr_head_ref:
+        type: string
         required: true
         description: "Head ref of the pull request that triggered the caller workflow"
   workflow_dispatch:
