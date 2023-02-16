@@ -3,11 +3,6 @@ name: generate-terraform-docs
 run-name: ${{ github.workflow }}
 on:
   workflow_call:
-    inputs:
-      ref:
-        type: string
-        required: true
-        description: "Ref to pull from and push to"
   workflow_dispatch:
 
 concurrency:
@@ -21,6 +16,7 @@ jobs:
   # Generate Terraform documentation for each module.
   generate-terraform-docs:
     name: generate-terraform-docs
+    needs: deploy
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -28,12 +24,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref }} # if it has no value if falls back to the default
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Generate Terraform documentation
         uses: terraform-docs/gh-actions@v1.0.0
         with:
-          find-dir: ${{ env.TERRAFORM_DIR }}/
+          find-dir: ${{ env.TERRAFORM_ABS_DIR }}/
           config-file: .terraform-docs.yaml
           output-method: replace
           git-push: "true"
