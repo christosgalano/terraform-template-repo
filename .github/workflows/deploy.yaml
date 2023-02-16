@@ -32,6 +32,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  TERRAFORM_ABS_DIR: ${{ github.workspace }}/terraform
   TERRAFORM_REL_ENV_DIR: terraform/environments
   TERRAFORM_ABS_ENV_DIR: ${{ github.workspace }}/terraform/environments
 
@@ -425,12 +426,21 @@ jobs:
         if: steps.apply.outcome == 'failure'
         run: exit 1
 
-  # Call the generate-terraform-docs workflow.
+  # Generate Terraform documentation for each module.
   generate-terraform-docs:
     name: generate-terraform-docs
     needs: deploy
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    uses: ./.github/workflows/generate_terraform_docs.yaml
-    with:
-      ref: ${{ github.ref }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Generate Terraform documentation
+        uses: terraform-docs/gh-actions@v1.0.0
+        with:
+          find-dir: ${{ env.TERRAFORM_ABS_DIR }}/
+          config-file: .terraform-docs.yaml
+          output-method: replace
+          git-push: "true"
