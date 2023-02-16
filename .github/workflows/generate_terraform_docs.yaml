@@ -4,10 +4,10 @@ run-name: ${{ github.workflow }}
 on:
   workflow_call:
     inputs:
-      head_ref:
+      ref:
         type: string
         required: true
-        description: "Head ref to pull and push to"
+        description: "Ref to pull from and push to"
   workflow_dispatch:
 
 concurrency:
