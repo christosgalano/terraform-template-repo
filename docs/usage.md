@@ -14,12 +14,12 @@ The most important principle that we want to preserve is the following:
 
 ```mermaid
 flowchart TD
-    CNB[create-new-branch] --> PC[perform-changes] --> OPR[open-a-pull-request-on-main] 
-    OPR --> WT[workflows-triggered] --> SCP{Status checks pass?}
-    SCP -->|Yes| MB[merge-branch]
-    SCP -->|No| ISD{Infra's state disrupted?}
-    ISD -->|Yes| DFM[deploy-main-branch-manually] --> FNB
-    ISD -->|No| FNB[fix-new-branch] --> UPR[update-pull-request] --> WT
+    CNB[create-new-branch] --> MC[make-changes] --> OPR[open-a-pull-request-on-main] 
+    OPR --> WT[workflows-triggered] --> SCP{status-checks-pass?}
+    SCP -->|Yes| DB[deploy-branch] --> ISD{disrupted-infra-state?}
+    ISD -->|Yes| DFM[deploy-main-branch-manually] --> FNB[fix-new-branch]
+    ISD -->|No| MB[merge-branch]
+    SCP -->|No| FNB --> UPR[update-pull-request] --> WT
 ```
 
 ## Resources
