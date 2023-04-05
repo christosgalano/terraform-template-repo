@@ -31,7 +31,7 @@ jobs:
       - name: Generate Terraform documentation
         uses: terraform-docs/gh-actions@v1.0.0
         with:
-          find-dir: ${{ env.TERRAFORM_ABS_DIR }}/
+          find-dir: ${{ env.TERRAFORM_DIR }}/
           config-file: .terraform-docs.yaml
           output-method: replace
           git-push: "true"
