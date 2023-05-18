@@ -36,7 +36,7 @@ To start contributing, follow these steps:
 6. Open a pull request in this repository, explaining your changes and their purpose.
 7. Wait for a review and collaborate with the maintainers to address any feedback.
 8. Once your contribution is accepted, it will be merged into the main repository. Thank you for your contribution!
-9. By participating in this project, you agree to abide by the Code of Conduct.
+9. By participating in this project, you agree to abide by the [Code of Conduct](https://github.com/christosgalano/.github/blob/main/CODE_OF_CONDUCT.md).
 10. We appreciate your dedication to improving the terraform-template-repo. Together, let's make it the best resource for the Terraform community!
 
 If you have any questions or need further assistance, feel free to reach out to us.
