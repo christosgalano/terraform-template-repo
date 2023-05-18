@@ -9,7 +9,7 @@ Welcome to the **terraform-template-repo**! This repository serves as a foundati
 The purpose of this repository is to simplify the setup and management of your Terraform projects. It offers the following key features:
 
 - **Modular structure:** The repository is organized into logical modules to help you easily navigate and manage your Terraform configurations.
-- **Comprehensive documentation:** The docs folder houses all the necessary documentation to help you effectively utilize this template repository.
+- **Comprehensive documentation:** The `docs/` folder houses all the necessary documentation to help you effectively utilize this template repository.
 - **Automated workflows:** The repository comes with a set of automated workflows to streamline your development process.
 
 ## Layout
