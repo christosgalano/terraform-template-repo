@@ -35,10 +35,10 @@ The `.github/workflows/` folder contains a set of automated workflows to streaml
 
 The `docs/` folder contains all the necessary documentation to help you effectively utilize this template repository. It contains information on how to effectively use this repository, how to set up your development environment, and how to use the automated workflows. Specifically, it contains the following files:
 
+- [**Usage guideline**](/docs/usage.md)
 - [**Manage environments**](/docs/environment_management.md)
 - [**Manage modules**](/docs/module_management.md)
 - [**Manage workflows**](/docs/workflows.md)
-- [**Usage guideline**](/docs/usage.md)
 
 ## Join the Community and Provide Your Feedback
 
