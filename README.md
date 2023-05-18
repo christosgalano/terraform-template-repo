@@ -44,15 +44,17 @@ The `docs/` folder contains all the necessary documentation to help you effectiv
 
 Your feedback and contributions are essential! Let's work together to make the terraform-template-repo even better:
 
-- **Share your experience:** I would love to hear how the terraform-template-repo has improved your workflow and projects. Share your success stories and suggestions with me.
+- **Share your experience:** We would love to hear how the terraform-template-repo has improved your workflow and projects. Share your success stories and suggestions with me.
 
 - **Contribute improvements:** Your ideas can make a significant impact. Contribute new features, enhance documentation, and optimize workflows to help us build a more powerful repository.
 
-- **Report issues:** If you come across any bugs or inconsistencies, please report them to me. Provide detailed information, so I can swiftly address and resolve the issues.
+- **Report issues:** If you come across any bugs or inconsistencies, please report them to me. Provide detailed information, so we can swiftly address and resolve the issues.
 
 - **Spread the word:** Help me reach a wider audience by sharing the terraform-template-repo with others who can benefit from it. Together, we can build a vibrant community and share our collective knowledge.
 
-Join the conversation, collaborate, and let your voice be heard! I value your input and eagerly anticipate the amazing projects you will create using this template repository.
+Join the conversation, collaborate, and let your voice be heard! We value your input and eagerly anticipate the amazing projects you will create using this template repository.
+
+More regarding contributing to this repository can be found in [CONTRIBUTING.md](/CONTRIBUTING.md).
 
 ## License
 
