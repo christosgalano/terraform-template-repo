@@ -58,7 +58,7 @@ jobs:
     steps:
       - name: Checkout
         if: github.event_name == 'pull_request'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Find which environment/s changed
         if: github.event_name == 'pull_request'
@@ -129,7 +129,7 @@ jobs:
         working-directory: ${{ env.TERRAFORM_ABS_ENV_DIR }}/${{ matrix.environment }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
