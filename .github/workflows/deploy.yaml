@@ -170,7 +170,7 @@ jobs:
         continue-on-error: true
 
       - name: Update pull request - 1
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: github.event_name == 'pull_request'
         id: update-pr-1
         with:
@@ -294,7 +294,7 @@ jobs:
         continue-on-error: true
 
       - name: Update pull request - 2
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: github.event_name == 'pull_request'
         id: update-pr-2
         with:
