@@ -62,7 +62,7 @@ jobs:
 
       - name: Find which environment/s changed
         if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
