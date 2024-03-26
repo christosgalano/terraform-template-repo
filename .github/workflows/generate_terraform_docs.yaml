@@ -29,7 +29,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Generate Terraform documentation
-        uses: terraform-docs/gh-actions@v1.0.0
+        uses: terraform-docs/gh-actions@v1.1.0
         with:
           find-dir: ${{ env.TERRAFORM_DIR }}/
           config-file: .terraform-docs.yaml
