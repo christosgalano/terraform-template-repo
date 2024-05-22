@@ -16,6 +16,12 @@ jobs:
 
       - name: Install terraform-docs
         run: |
+          arch=""
+          if [[ "$(uname -m)" == "x86_64" ]]; then
+            arch="amd64"
+          elif [[ "$(uname -m)" == "aarch64" ]]; then
+            arch="amd64"
+          fi
           latest_version=$(curl -s "https://api.github.com/repos/terraform-docs/terraform-docs/releases/latest" | jq -r .tag_name)
           curl -sL "https://github.com/terraform-docs/terraform-docs/releases/download/$latest_version/terraform-docs-${latest_version}-linux-${arch}.tar.gz" -o terraform-docs.tar.gz
           mkdir -p terraform-docs && tar -xzf terraform-docs.tar.gz --directory terraform-docs
