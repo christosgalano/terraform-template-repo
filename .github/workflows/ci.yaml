@@ -69,7 +69,7 @@ jobs:
 
   terraform_test:
     uses: ./.github/workflows/test.yaml
-    needs: terraform_scan
+    needs: [terraform_scan, select_environments]
     strategy:
       fail-fast: false
       matrix:
