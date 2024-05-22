@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - "terraform/**"
-      - ".github/workflows/**"
   workflow_dispatch:
 
 jobs:
