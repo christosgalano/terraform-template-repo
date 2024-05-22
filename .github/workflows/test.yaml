@@ -12,19 +12,6 @@ on:
         type: string
         required: true
         description: 'The Terraform environment root module to test.'
-    secrets:
-      ARM_CLIENT_ID:
-        required: true
-        description: 'Azure Service Principal Client ID'
-      ARM_CLIENT_SECRET:
-        required: true
-        description: 'Azure Service Principal Client Secret'
-      ARM_TENANT_ID:
-        required: true
-        description: 'Azure Service Principal Tenant ID'
-      ARM_SUBSCRIPTION_ID:
-        required: true
-        description: 'Azure Service Principal Subscription ID'
 
 jobs:
   terraform_test:
@@ -61,8 +48,3 @@ jobs:
         if: ${{ inputs.suite == 'all' || inputs.suite == 'integration' }}
         run : terraform test -filter=tests/integration.tftest.hcl
         working-directory: ${{ env.ROOT_MODULE_DIRECTORY }}
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
