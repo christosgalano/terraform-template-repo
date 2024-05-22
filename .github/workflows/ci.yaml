@@ -56,6 +56,7 @@ jobs:
     uses: ./.github/workflows/scan.yaml
     needs: select_environments
     strategy:
+      max-parallel: 3
       fail-fast: false
       matrix:
         environment: ${{ fromJson(needs.select_environments.outputs.environments) }}
@@ -71,6 +72,7 @@ jobs:
     uses: ./.github/workflows/test.yaml
     needs: terraform_scan
     strategy:
+      max-parallel: 3
       fail-fast: false
       matrix:
         environment: ${{ fromJson(needs.select_environments.outputs.environments) }}
