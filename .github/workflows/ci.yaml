@@ -46,7 +46,7 @@ jobs:
           if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
             environments+=("production")
           fi
-          if [ "${{ steps.filter.outputs.modules }}" == "true" ]; then
+          if [ "${{ steps.filter.outputs.modules }}" == "true" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             environments=("development" "staging" "production")
           fi
           environments_json=$(jq -c -n '$ARGS.positional' --args "${environments[@]}")
