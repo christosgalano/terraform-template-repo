@@ -1,435 +1,78 @@
-# This workflow makes sure our Terraform modules are valid, selects our deployment's environment(s),
-# deploys our Terraform code and then generates documentation for each Terraform module.
-name: deploy
-run-name: ${{ github.workflow }}
+name: Deploy
+
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "terraform/**"
   workflow_dispatch:
     inputs:
-      environment:
-        type: environment
+      root_module:
+        type: choice
+        options:
+          - 'environments/development'
+          - 'environments/staging'
+          - 'environments/production'
         required: true
-        description: "Specify the deployment's environment"
+        description: "The root module to deploy."
       noop:
-        type: boolean
-        default: false
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+        default: 'false'
         required: true
-        description: "Set noop (no operations) mode"
+        description: "Noop (no operations) mode."
 
-# Cancel in progress workflows based on the following criteria:
-# - if the trigger was pull_request
-# - if the trigger was workflow_dispatch and the environment is the same
-
-# Simultaneous deployment is only allowed when it's manually triggered
-# and targets different environments; otherwise, the most recently
-# triggered workflow gets executed.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
+  group: ${{ github.workflow }}-${{ github.event }}
   cancel-in-progress: true
 
 env:
-  TERRAFORM_REL_ENV_DIR: terraform/environments
-  TERRAFORM_ABS_ENV_DIR: ${{ github.workspace }}/terraform/environments
+  ROOT_MODULE_DIRECTORY: terraform/${{ github.event.inputs.root_module }}
 
 jobs:
-  # Call the validate-modules workflow.
-  validate-modules:
-    name: validate-modules
-    uses: ./.github/workflows/validate_modules.yaml
-
-  # Select the environments to deploy to.
-  # The selection is based on one of the following:
-  # - pull request and modifications to the "modules" directory -> select all environments
-  # - pull request and modifications to a specific environment(s) directory -> select that/those environment(s)
-  # - workflow dispatch -> select chosen environment
-  select-environments:
-    name: select-environments
-    needs: validate-modules
-    runs-on: ubuntu-latest
+  terraform_scan:
+    uses: ./.github/workflows/scan.yaml
     permissions:
       contents: read
-      pull-requests: read
-    outputs:
-      environments: ${{ steps.select-environments.outputs.environments || steps.provided-environment.outputs.environment }}
-    steps:
-      - name: Checkout
-        if: github.event_name == 'pull_request'
-        uses: actions/checkout@v4
+      issues: read
+      checks: write
+    with:
+      working_directory: $ROOT_MODULE_DIRECTORY
 
-      - name: Find which environment/s changed
-        if: github.event_name == 'pull_request'
-        uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            modules:
-              - '**/modules/**'
-            development:
-              - '**/development/**'
-            staging:
-              - '**/staging/**'
-            production:
-              - '**/production/**'
+  terraform_test:
+    uses: ./.github/workflows/test.yaml
+    needs: terraform_scan
+    secrets: inherit
+    with:
+      suite: 'all'
+      working_directory: $ROOT_MODULE_DIRECTORY
 
-      - name: Select environments
-        if: github.event_name == 'pull_request'
-        id: select-environments
-        run: |
-          environments=()
-          if [ "${{ steps.filter.outputs.development }}" == "true" ]; then
-            environments+=("development")
-          fi
-          if [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
-            environments+=("staging")
-          fi
-          if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
-            environments+=("production")
-          fi
-          if [ "${{ steps.filter.outputs.modules }}" == "true" ]; then
-            environments=("development" "staging" "production")
-          fi
-          environments_json=$(jq -c -n '$ARGS.positional' --args "${environments[@]}")
-          echo "Selected environments: $environments_json"
-          echo "environments=$environments_json" >> $GITHUB_OUTPUT
-
-      - name: Provided environment
-        if: github.event_name == 'workflow_dispatch'
-        id: provided-environment
-        run: |
-          environment_json=$(jq -c -n '$ARGS.positional' --args "${{ inputs.environment }}")
-          echo "Selected environment: $environment_json"
-          echo "environment=$environment_json" >> $GITHUB_OUTPUT
-
-  # Deploy our Terraform code.
-  # The flow of execution is as follows:
-  # 1. Deploy to the development environment (if the development environment was selected).
-  # 2. Deploy to the staging environment (if the staging environment was selected and the development deployment was completed successfully).
-  # 3. Deploy to the production environment (if the production environment was selected and the staging deployment was successful).
-  deploy:
-    name: deploy
-    needs: select-environments
+  terraform_deploy:
+    name: Deploy Infrastructure
+    needs: terraform_test
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: ${{ matrix.environment }}
-    permissions:
-      contents: read
-      id-token: write
-      pull-requests: write
-    strategy:
-      max-parallel: 1
-      fail-fast: true
-      matrix:
-        environment: ${{ fromJson(needs.select-environments.outputs.environments) }}
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ env.TERRAFORM_ABS_ENV_DIR }}/${{ matrix.environment }}
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
+      - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-      - name: Run tfsec
-        uses: aquasecurity/tfsec-action@v1.0.3
-        id: tfsec
-        with:
-          working_directory: ${{ env.TERRAFORM_ABS_ENV_DIR }}/${{ matrix.environment }}
-          soft_fail: false
-          additional_args: "--tfvars-file ${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}/${{ matrix.environment }}.auto.tfvars --concise-output"
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-
-      - name: Terraform fmt
-        id: fmt
-        run: terraform fmt -check
-        continue-on-error: true
+          terraform_version: ">= 1.8, < 2.0"
 
       - name: Terraform init
-        id: init
         run: terraform init
-        continue-on-error: true
-
-      - name: Terraform validate
-        id: validate
-        run: terraform validate -no-color
-        continue-on-error: true
+        working-directory: $ROOT_MODULE_DIRECTORY
 
       - name: Terraform plan
-        id: plan
-        run: |
-          terraform plan \
-            -no-color -input=false \
-            -out=${{ matrix.environment }}.tfplan
-        continue-on-error: true
-
-      - name: Update pull request - 1
-        uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
-        id: update-pr-1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          result-encoding: string
-          script: |
-            // 1. Retrieve existing bot comments for the PR
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            })
-            const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('${{ matrix.environment }}')
-            })
-
-            // 2. Prepare format of the comment
-            var character_limit_reached = "false"
-            var output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
-            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
-
-            \`\`\`hcl
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-
-            <details><summary>Plan Output</summary>
-
-            \`\`\`hcl
-            ${{ steps.plan.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
-
-            // 3. Check if character limit was reached and update accordingly
-            if (output.length > 65536) {
-              character_limit_reached = "true"
-              output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
-              #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-              #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-              #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-              <details><summary>Validation Output</summary>
-              
-              \`\`\`hcl
-              ${{ steps.validate.outputs.stdout }}
-              \`\`\`
-              
-              </details>
-              
-              #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-              
-              <details><summary>Plan Output</summary>
-              Terraform plan's output was too big to fit in a PR comment. You can find it <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">here</a>.
-              
-              </details>
-              
-              *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
-            }
-
-            // 4. If we have a comment, update it, otherwise create a new one
-            if (botComment) {
-              github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: output
-              })
-            } else {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: output
-              })
-            }
-
-            return character_limit_reached
-
-      - name: Terraform actions summary
-        if: |
-          (steps.tfsec.outcome == 'failure' || steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure'
-          || steps.validate.outcome == 'failure' || steps.plan.outcome == 'failure')
-          || (github.event_name == 'workflow_dispatch' && inputs.noop)
-        run: |
-          summary="## Terraform actions summary for ${{ matrix.environment }}\n
-          #### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`\n
-          #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`\n
-          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`\n
-          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`\n
-          <details><summary>Validation Output</summary>\n
-          \`\`\`hcl\n${{ steps.validate.outputs.stdout }}\`\`\`\n
-          </details>\n
-          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`\n
-          <details><summary>Plan Output</summary>\n
-          \`\`\`hcl\n${{ steps.plan.outputs.stdout }}\`\`\`\n
-          </details>\n"
-          printf "$summary" >> $GITHUB_STEP_SUMMARY
-
-      - name: Failed tfsec status
-        if: steps.tfsec.outcome == 'failure'
-        run: exit 1
-
-      - name: Failed terraform status
-        if: |
-          steps.fmt.outcome == 'failure' || steps.init.outcome == 'failure'
-          || steps.validate.outcome == 'failure' || steps.plan.outcome == 'failure'
-        run: exit 1
+        run: terraform plan -out=tfplan -input=false
+        working-directory: $ROOT_MODULE_DIRECTORY
 
       - name: Terraform apply
-        if: github.event_name == 'pull_request' || !inputs.noop # branch deploy strategy
-        id: apply
-        run: terraform apply ${{ matrix.environment }}.tfplan -no-color
-        continue-on-error: true
-
-      - name: Update pull request - 2
-        uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
-        id: update-pr-2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            // 1. Retrieve existing bot comments for the PR
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            })
-            const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('${{ matrix.environment }}')
-            })
-
-            // 2. Prepare format of the comment
-            var character_limit_reached = "false"
-            var output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
-            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
-
-            \`\`\`hcl
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-
-            <details><summary>Plan Output</summary>
-
-            \`\`\`hcl
-            ${{ steps.plan.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            #### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`
-
-            <details><summary>Apply Output</summary>
-
-            \`\`\`hcl
-            ${{ steps.apply.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
-
-            // 3. Check if character limit was reached and update accordingly
-            if (output.length > 65536) {
-              character_limit_reached = "true"
-              output = `#### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`
-              #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-              #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-              #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-              <details><summary>Validation Output</summary>
-              
-              \`\`\`hcl
-              ${{ steps.validate.outputs.stdout }}
-              \`\`\`
-              
-              </details>
-              
-              #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-              
-              <details><summary>Plan Output</summary>
-              Terraform plan's output was too big to fit in a PR comment. You can find it <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">here</a>.
-              
-              </details>
-
-              #### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`
-
-              <details><summary>Apply Output</summary>
-
-              \`\`\`hcl
-              ${{ steps.apply.outputs.stdout }}
-              \`\`\`
-
-              </details>
-              
-              *Actor: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.TERRAFORM_REL_ENV_DIR }}/${{ matrix.environment }}\`, Workflow: \`${{ github.workflow }}\`*`;
-            }
-
-            // 4. If we have a comment, update it, otherwise create a new one
-            if (botComment) {
-              github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: output
-              })
-            } else {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: output
-              })
-            }
-
-            return character_limit_reached
-
-      - name: Terraform actions summary
-        if: github.event_name == 'pull_request' || !inputs.noop
-        run: |
-          summary="## Terraform actions summary for ${{ matrix.environment }}\n
-          #### Tfsec Scan Result ㊙️\`${{ steps.tfsec.outcome }}\`\n
-          #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`\n
-          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`\n
-          #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`\n
-          <details><summary>Validation Output</summary>\n
-          \`\`\`hcl\n${{ steps.validate.outputs.stdout }}\`\`\`\n
-          </details>\n
-          #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`\n
-          <details><summary>Plan Output</summary>\n
-          \`\`\`hcl\n${{ steps.plan.outputs.stdout }}\`\`\`\n
-          </details>\n
-          #### Terraform Apply 🎯\`${{ steps.apply.outcome }}\`\n
-          <details><summary>Apply Output</summary>\n
-          \`\`\`hcl\n${{ steps.apply.outputs.stdout }}\`\`\`\n
-          </details>\n"
-          printf "$summary" >> $GITHUB_STEP_SUMMARY
-
-      - name: Failed terraform apply status
-        if: steps.apply.outcome == 'failure'
-        run: exit 1
-
-  # Call the generate-terraform-docs workflow.
-  generate-terraform-docs:
-    name: generate-terraform-docs
-    needs: deploy
-    permissions:
-      contents: write
-      pull-requests: read
-    uses: ./.github/workflows/generate_terraform_docs.yaml
+        if: github.event.inputs.noop == 'false'
+        run: terraform apply tfplan
+        working-directory: $ROOT_MODULE_DIRECTORY

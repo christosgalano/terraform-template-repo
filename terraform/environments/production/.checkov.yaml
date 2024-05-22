@@ -1,0 +1,60 @@
+quiet: true
+soft-fail: true
+framework: terraform
+skip-path: tests
+
+# https://www.checkov.io/5.Policy%20Index/terraform.html
+skip-check:
+  # Ensure the key vault is recoverable.
+  - CKV_AZURE_42
+
+  # Ensure that key vault allows firewall rules settings.
+  - CKV_AZURE_109
+
+  # Ensure that key vault enables purge protection.
+  - CKV_AZURE_110
+
+  # Ensure App Service has a minimum number of instances for failover.
+  - CKV_AZURE_212
+
+  # Ensure the App Service Plan is zone redundant.
+  - CKV_AZURE_225
+
+  # Ensure that App service enables HTTP logging.
+  - CKV_AZURE_63
+
+  # Ensure that app services use Azure Files.
+  - CKV_AZURE_88
+
+  # Ensure that Register with Azure Active Directory is enabled on App Service.
+  - CKV_AZURE_16
+
+  # Ensure App Service Authentication is set on Azure App Service.
+  - CKV_AZURE_13
+
+  # Ensure that App Service configures health check.
+  - CKV_AZURE_213
+
+  # Ensure FTP deployments are disabled.
+  - CKV_AZURE_78
+
+  # Ensure that 'HTTP Version' is the latest if used to run the web app.
+  - CKV_AZURE_18
+
+  # Ensure the web app has 'Client Certificates (Incoming client certificates)' set.
+  - CKV_AZURE_17
+
+  # Ensure that Azure Web App public network access is disabled.
+  - CKV_AZURE_222
+
+  # Ensure that Managed identity provider is enabled for app services.
+  - CKV_AZURE_71
+
+  # Ensure that App service enables failed request tracing.
+  - CKV_AZURE_66
+
+  # Ensure that App service enables detailed error messages.
+  - CKV_AZURE_65
+
+  # Ensure VNET subnet is configured with a Network Security Group (NSG).
+  - CKV2_AZURE_31

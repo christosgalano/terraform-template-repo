@@ -1,0 +1,68 @@
+name: Test
+
+on:
+  workflow_call:
+    inputs:
+      suite:
+        type: string
+        default: 'all'
+        required: true
+        description: 'Test suite to run (all, contract, or integration).'
+      environment:
+        type: string
+        required: true
+        description: 'The Terraform environment root module to test.'
+    secrets:
+      ARM_CLIENT_ID:
+        required: true
+        description: 'Azure Service Principal Client ID'
+      ARM_CLIENT_SECRET:
+        required: true
+        description: 'Azure Service Principal Client Secret'
+      ARM_TENANT_ID:
+        required: true
+        description: 'Azure Service Principal Tenant ID'
+      ARM_SUBSCRIPTION_ID:
+        required: true
+        description: 'Azure Service Principal Subscription ID'
+
+jobs:
+  terraform_test:
+    name: Test Configuration
+    runs-on: ubuntu-latest
+    env:
+      ROOT_MODULE_DIRECTORY: terraform/environments/${{ inputs.environment }}
+    steps:
+      - name: Input validation
+        run: |
+          if [[ ! ${{ inputs.suite }} =~ ^(all|contract|integration)$ ]]; then
+            echo "Invalid suite: ${{ inputs.suite }}. Valid values are all, contract, or integration."
+            exit 1
+          fi
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ">= 1.8, < 2.0"
+
+      - name: Terraform init
+        run: terraform init -backend=false -input=false
+        working-directory: ${{ env.ROOT_MODULE_DIRECTORY }}
+
+      - name: Contract tests
+        if: ${{ inputs.suite == 'all' || inputs.suite == 'contract' }}
+        run: terraform test -filter=tests/contract.tftest.hcl
+        working-directory: ${{ env.ROOT_MODULE_DIRECTORY }}
+
+      - name: Integration tests
+        if: ${{ inputs.suite == 'all' || inputs.suite == 'integration' }}
+        run : terraform test -filter=tests/integration.tftest.hcl
+        working-directory: ${{ env.ROOT_MODULE_DIRECTORY }}
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}

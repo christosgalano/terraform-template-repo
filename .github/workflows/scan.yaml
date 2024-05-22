@@ -1,0 +1,77 @@
+name: Scan
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+        description: 'The Terraform environment root module to test.'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event }}
+  cancel-in-progress: true
+
+jobs:
+  terraform_scan:
+    name: Scan Configuration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: read
+      checks: write
+      pull-requests: write
+    env:
+      ROOT_MODULE_DIRECTORY: terraform/environments/${{ inputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ">= 1.8, < 2.0"
+
+      - name: Terraform init
+        run: terraform init -backend=false -input=false
+        working-directory: ${{ env.ROOT_MODULE_DIRECTORY }}
+
+      - name: Terraform format check
+        run: terraform fmt -check
+        working-directory: ${{ env.ROOT_MODULE_DIRECTORY }}
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: ${{ env.ROOT_MODULE_DIRECTORY }}
+
+      - name: Install tflint
+        uses: terraform-linters/setup-tflint@v4
+
+      - name: Tflint scan
+        run: |
+          tflint --init --config .tflint.hcl
+          tflint --config "$(pwd)/.tflint.hcl" --format junit > tflint_results_junit.xml
+        working-directory: ${{ env.ROOT_MODULE_DIRECTORY }}
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-ref: ${{ env.ROOT_MODULE_DIRECTORY }}
+          scan-type: fs
+          trivy-config: .trivy.yaml
+
+      - name: Checkov scan
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: ${{ env.ROOT_MODULE_DIRECTORY }}
+          config_file: .checkov.yaml
+          output_format: cli,junitxml
+          output_file_path: console,checkov_results_junit.xml
+
+      - name: Publish results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: success() || failure()
+        with:
+          check_name: Scan results - ${{ inputs.environment }}
+          files: '${{ env.ROOT_MODULE_DIRECTORY }}/*_junit.xml'
+          action_fail: true

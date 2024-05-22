@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<testsuites name="trivy">
+{{- range . -}}
+  {{- $target := .Target }}
+  {{- $misconfigurations := .Misconfigurations }}
+  {{- with .Vulnerabilities -}}
+    <testsuite name="{{ $target }}" tests="{{ len . }}" failures="{{ len . }}">
+    {{- range . }}
+      <testcase classname="{{ .PkgName }}-{{ .InstalledVersion }}" name="[{{ .Vulnerability.Severity }}] {{ .VulnerabilityID }}">
+        <failure type="failure" message="{{ escapeXML .Title }}">
+          ID: {{ .ID }}
+          PkgID: {{ .PkgID }}
+          PkgName: {{ .PkgName }}
+          InstalledVersion: {{ .InstalledVersion }}
+          FixedVersion: {{ .FixedVersion }}
+          PrimaryURL: {{ .PrimaryURL }}
+        </failure>
+      </testcase>
+    {{- end }}
+    </testsuite>
+  {{- end }}
+  {{- with .Secrets -}}
+    <testsuite name="{{ $target }}" tests="{{ len . }}" failures="{{ len . }}">
+    {{- range . }}
+      <testcase classname="{{ .RuleID }}" name="[{{ .Severity }}] {{ .Title }}">
+        <failure type="failure" message="{{ escapeXML .Title }}">
+          RuleID: {{ .RuleID }}
+          Category: {{ .Category }}
+          Severity: {{ .Severity }}
+          Title: {{ escapeXML .Title }}
+          StartLine: {{ .StartLine }}
+          EndLine: {{ .EndLine }}
+        </failure>
+      </testcase>
+    {{- end }}
+    </testsuite>
+  {{- end }}
+  {{- with .MisconfSummary -}}
+    <testsuite name="{{ $target }}" tests="{{ add .Successes .Failures }}" failures="{{ .Failures }}" skipped="{{ .Exceptions }}">
+    {{- range $misconfigurations }}
+      <testcase classname="{{ .Type }}" name="[{{ .Severity }}] {{ .ID }} - {{ escapeXML .Title }}">
+        {{- if (eq .Status "FAIL") }}
+          <failure type="failure" message="{{ escapeXML .Message }}">{{ escapeXML .Description }}</failure>
+        {{- else }}
+          <system-out>{{ escapeXML .Description }}</system-out>
+        {{- end }}
+      </testcase>
+    {{- end }}
+    </testsuite>
+  {{- end }}
+{{- end }}
+</testsuites>

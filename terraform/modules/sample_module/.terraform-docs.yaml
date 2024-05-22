@@ -1,11 +1,22 @@
-formatter: "markdown table" # required
+formatter: 'markdown table'
 
-version: ">= 0.13.0"
+version: '>= 0.17.0, < 1.0.0'
+
+header-from: '_header.md'
+
+recursive:
+  enabled: false
+  path: modules
+
+sections:
+  hide: []
+  show: []
 
 content: |-
-  {{ .Requirements }}
+  {{ .Header }}
 
   ## Usage
+
   Basic usage of this module is as follows:
   ```hcl
   module "example" {
@@ -24,10 +35,8 @@ content: |-
     {{- end }}
   }
   ```
-  
-  {{ .Providers }}
 
-  {{ .Modules }}
+  {{ .Providers }}
 
   {{ .Resources }}
 
@@ -35,11 +44,17 @@ content: |-
 
   {{ .Outputs }}
 
+  {{ .Modules }}
+
 output:
-  file: "README.md"
+  file: README.md
   mode: replace
   template: |-
     {{ .Content }}
+
+output-values:
+  enabled: false
+  from: ''
 
 sort:
   enabled: true
@@ -51,10 +66,10 @@ settings:
   default: true
   description: true
   escape: true
-  hide-empty: true
-  html: false
+  hide-empty: false
+  html: true
   indent: 2
-  lockfile: true
+  lockfile: false
   read-comments: true
   required: true
   sensitive: true

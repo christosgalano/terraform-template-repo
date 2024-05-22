@@ -1,0 +1,6 @@
+misconfigurations:
+  # Key vault should have the network acl block specified.
+  - id: AVD-AZU-0013
+
+  # Key vault should have purge protection enabled.
+  - id: AVD-AZU-0016

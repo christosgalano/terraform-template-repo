@@ -1,25 +1,36 @@
-# This workflow requires an approval, and based on that, it destroys our environment's infrastructure.
-name: destroy
-run-name: ${{ github.workflow }}
+name: Destroy
+
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        type: environment
+      root_module:
+        type: choice
+        options:
+          - 'environments/development'
+          - 'environments/staging'
+          - 'environments/production'
         required: true
-        description: "Specify the environment to be destroyed"
+        description: "The root module to deploy."
+      noop:
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+        default: 'false'
+        required: true
+        description: "Noop (no operations) mode."
 
-# Cancel in-progress workflows that have the same environment.
-# By default, the newly triggered workflow will fail because another deployment has the Terraform lock.
-# So we override this and always deploy the most recently triggered workflow.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.inputs.environment }}
+  group: ${{ github.workflow }}-${{ github.event }}
   cancel-in-progress: true
+
+env:
+  ROOT_MODULE_DIRECTORY: terraform/${{ github.event.inputs.root_module }}
 
 jobs:
   # Require approval in the form of an open issue in order to destroy the infrastructure.
-  approve:
-    name: approve-infra-teardown
+  approve-teardown:
+    name: Approve Infrastructure Teardown
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -28,35 +39,39 @@ jobs:
         uses: trstringer/manual-approval@v1.9.0
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: user1,user2,..,userN
-          minimum-approvals: 1,2,..,N
-          issue-title: "Approve infrastructure teardown for the ${{ inputs.environment }} environment"
+          approvers: user1,use2,...,userN
+          minimum-approvals: 1,2,...,N
+          issue-title: "Approve infrastructure teardown for ${{ github.event.inputs.root_module }}." 
           exclude-workflow-initiator-as-approver: false
 
-  # Destroy the infrastructure.
-  destroy:
-    name: destroy
-    needs: approve
+  terraform_destroy:
+    name: Destroy Infrastructure
+    if: github.ref == 'refs/heads/main'
+    needs: approve-teardown
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }} # set environment - easier for OIDC management
-    permissions:
-      id-token: write
-      contents: read
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ github.workspace }}/terraform/environments/${{ inputs.environment }}
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
+      - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_version: ">= 1.8, < 2.0"
 
       - name: Terraform init
         run: terraform init
+        working-directory: $ROOT_MODULE_DIRECTORY
 
-      - name: Terraform destroy
-        run: terraform apply -destroy -no-color -auto-approve
+      - name: Terraform plan
+        run: terraform plan -destroy -out=tfplan -input=false
+        working-directory: $ROOT_MODULE_DIRECTORY
+
+      - name: Terraform apply
+        if: github.event.inputs.noop == 'false'
+        run: terraform apply tfplan
+        working-directory: $ROOT_MODULE_DIRECTORY

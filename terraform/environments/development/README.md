@@ -1,15 +1,22 @@
-<!-- BEGIN_TF_DOCS -->
+# Development
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.3 |
 
+## Providers
 
+No providers.
 
+## Modules
 
+No modules.
 
+## Resources
 
+No resources.
 
 ## Inputs
 
@@ -20,5 +27,6 @@
 | <a name="input_location_abbreviation"></a> [location\_abbreviation](#input\_location\_abbreviation) | Abbreviation of the location | `string` | n/a | yes |
 | <a name="input_workload"></a> [workload](#input\_workload) | Name of the workload that will be deployed | `string` | n/a | yes |
 
+## Outputs
 
-<!-- END_TF_DOCS -->
+No outputs.

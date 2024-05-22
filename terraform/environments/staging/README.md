@@ -1,15 +1,22 @@
-<!-- BEGIN_TF_DOCS -->
+# Staging
+
 ## Requirements
 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.3 |
 
+## Providers
 
+No providers.
 
+## Modules
 
+No modules.
 
+## Resources
 
+No resources.
 
 ## Inputs
 
@@ -21,5 +28,6 @@
 | <a name="input_workload"></a> [workload](#input\_workload) | Name of the workload that will be deployed | `string` | n/a | yes |
 | <a name="input_rg_tags"></a> [rg\_tags](#input\_rg\_tags) | Tags to be applied on the resource groups | `map(string)` | `{}` | no |
 
+## Outputs
 
-<!-- END_TF_DOCS -->
+No outputs.

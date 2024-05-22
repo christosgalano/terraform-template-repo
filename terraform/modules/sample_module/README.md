@@ -1,25 +1,32 @@
-<!-- BEGIN_TF_DOCS -->
-## Requirements
+# sample\_module
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.3 |
+This is a sample module.
 
 ## Usage
+
 Basic usage of this module is as follows:
 ```hcl
 module "example" {
-   source = "<module-path>"
+     source = "<module-path>"
 }
 ```
 
+## Providers
 
+No providers.
 
+## Resources
 
+No resources.
 
+## Inputs
 
+No inputs.
 
+## Outputs
 
+No outputs.
 
+## Modules
 
-<!-- END_TF_DOCS -->
+No modules.

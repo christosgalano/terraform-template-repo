@@ -1,0 +1,86 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/**"
+      - ".github/workflows/**"
+
+jobs:
+  select_environments:
+    name: Select Environments
+    runs-on: ubuntu-latest
+    outputs:
+      environments: ${{ steps.select-environments.outputs.environments }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Find which environment/s changed
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            modules:
+              - '**/terraform/modules/**'
+            development:
+              - '**/terraform/environments/development/**'
+            staging:
+              - '**/terraform/environments/staging/**'
+            production:
+              - '**/terraform/environments/production/**'
+
+      - name: Select environments
+        id: select-environments
+        run: |
+          environments=()
+          if [ "${{ steps.filter.outputs.development }}" == "true" ]; then
+            environments+=("development")
+          fi
+          if [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
+            environments+=("staging")
+          fi
+          if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
+            environments+=("production")
+          fi
+          if [ "${{ steps.filter.outputs.modules }}" == "true" ]; then
+            environments=("development" "staging" "production")
+          fi
+          environments_json=$(jq -c -n '$ARGS.positional' --args "${environments[@]}")
+          echo "Selected environments: $environments_json"
+          echo "environments=$environments_json" >> $GITHUB_OUTPUT
+
+  terraform_scan:
+    uses: ./.github/workflows/scan.yaml
+    needs: select_environments
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(needs.select_environments.outputs.environments) }}
+    permissions:
+      contents: read
+      issues: read
+      checks: write
+      pull-requests: write
+    with:
+      environment: ${{ matrix.environment }}
+
+  terraform_test:
+    uses: ./.github/workflows/test.yaml
+    needs: terraform_scan
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(needs.select_environments.outputs.environments) }}
+    secrets: inherit
+    with:
+      suite: 'contract'
+      environment: ${{ matrix.environment }}
+
+  terraform_docs:
+    uses: ./.github/workflows/terraform-docs.yaml
+    needs: terraform_test
+    permissions:
+      contents: write

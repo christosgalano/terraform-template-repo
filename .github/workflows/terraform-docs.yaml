@@ -1,0 +1,38 @@
+name: Generate Documentation
+
+on:
+  workflow_call:
+
+jobs:
+  terraform_docs:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install terraform-docs
+        run: |
+          latest_version=$(curl -s "https://api.github.com/repos/terraform-docs/terraform-docs/releases/latest" | jq -r .tag_name)
+          curl -sL "https://github.com/terraform-docs/terraform-docs/releases/download/$latest_version/terraform-docs-${latest_version}-linux-${arch}.tar.gz" -o terraform-docs.tar.gz
+          mkdir -p terraform-docs && tar -xzf terraform-docs.tar.gz --directory terraform-docs
+          chmod +x ./terraform-docs/terraform-docs
+          mv ./terraform-docs/terraform-docs /usr/local/bin
+          rm -rf terraform-docs.tar.gz terraform-docs
+
+      - name: Generate documentation
+        run: |
+          for env in ./environments/*; do terraform-docs $env -c $env/.terraform-docs.yaml; done
+          for mod in ./modules/*; do terraform-docs $mod -c $mod/.terraform-docs.yaml; done
+        working-directory: terraform
+      
+      - name: Push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update documentation"
+          git push
+        working-directory: terraform
