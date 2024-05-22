@@ -14,3 +14,7 @@ plugin "azurerm" {
   version = "0.26.0"
   source  = "github.com/terraform-linters/tflint-ruleset-azurerm"
 }
+
+rule "terraform_unused_declarations" {
+  enabled = false
+}
