@@ -3,14 +3,14 @@ name: Deploy
 on:
   workflow_dispatch:
     inputs:
-      root_module:
+      environment:
         type: choice
         options:
-          - 'environments/development'
-          - 'environments/staging'
-          - 'environments/production'
+          - development
+          - staging
+          - production
         required: true
-        description: "The root module to deploy."
+        description: 'The environment root module to deploy.'
       noop:
         type: choice
         options:
@@ -18,14 +18,11 @@ on:
           - 'false'
         default: 'false'
         required: true
-        description: "Noop (no operations) mode."
+        description: 'Noop (no operations) mode.'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event }}
   cancel-in-progress: true
-
-env:
-  ROOT_MODULE_DIRECTORY: terraform/${{ github.event.inputs.root_module }}
 
 jobs:
   terraform_scan:
@@ -35,7 +32,7 @@ jobs:
       issues: read
       checks: write
     with:
-      working_directory: $ROOT_MODULE_DIRECTORY
+      environment: ${{ inputs.environment }}
 
   terraform_test:
     uses: ./.github/workflows/test.yaml
@@ -43,13 +40,16 @@ jobs:
     secrets: inherit
     with:
       suite: 'all'
-      working_directory: $ROOT_MODULE_DIRECTORY
+      environment: ${{ inputs.environment }}
 
   terraform_deploy:
     name: Deploy Infrastructure
     needs: terraform_test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/environments/${{ inputs.environment }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,13 +61,10 @@ jobs:
 
       - name: Terraform init
         run: terraform init
-        working-directory: $ROOT_MODULE_DIRECTORY
 
       - name: Terraform plan
         run: terraform plan -out=tfplan -input=false
-        working-directory: $ROOT_MODULE_DIRECTORY
 
       - name: Terraform apply
         if: github.event.inputs.noop == 'false'
         run: terraform apply tfplan
-        working-directory: $ROOT_MODULE_DIRECTORY

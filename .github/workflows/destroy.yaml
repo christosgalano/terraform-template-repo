@@ -3,14 +3,14 @@ name: Destroy
 on:
   workflow_dispatch:
     inputs:
-      root_module:
+      environment:
         type: choice
         options:
-          - 'environments/development'
-          - 'environments/staging'
-          - 'environments/production'
+          - development
+          - staging
+          - production
         required: true
-        description: "The root module to deploy."
+        description: 'The environment root module to destroy.'
       noop:
         type: choice
         options:
@@ -18,14 +18,11 @@ on:
           - 'false'
         default: 'false'
         required: true
-        description: "Noop (no operations) mode."
+        description: 'Noop (no operations) mode.'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event }}
   cancel-in-progress: true
-
-env:
-  ROOT_MODULE_DIRECTORY: terraform/${{ github.event.inputs.root_module }}
 
 jobs:
   # Require approval in the form of an open issue in order to destroy the infrastructure.
@@ -41,7 +38,7 @@ jobs:
           secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: christosgalano
           minimum-approvals: 1
-          issue-title: "Approve infrastructure teardown for ${{ github.event.inputs.root_module }}." 
+          issue-title: "Approve infrastructure teardown for the ${{ inputs.environment }} environment."
           exclude-workflow-initiator-as-approver: false
 
   terraform_destroy:
@@ -49,11 +46,9 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: approve-teardown
     runs-on: ubuntu-latest
-    env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    defaults:
+      run:
+        working-directory: terraform/environments/${{ inputs.environment }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -65,13 +60,10 @@ jobs:
 
       - name: Terraform init
         run: terraform init
-        working-directory: $ROOT_MODULE_DIRECTORY
 
       - name: Terraform plan
         run: terraform plan -destroy -out=tfplan -input=false
-        working-directory: $ROOT_MODULE_DIRECTORY
 
       - name: Terraform apply
         if: github.event.inputs.noop == 'false'
         run: terraform apply tfplan
-        working-directory: $ROOT_MODULE_DIRECTORY
