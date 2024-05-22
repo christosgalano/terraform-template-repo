@@ -8,10 +8,6 @@ on:
         required: true
         description: 'The Terraform environment root module to test.'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event }}
-  cancel-in-progress: true
-
 jobs:
   terraform_scan:
     name: Scan Configuration
