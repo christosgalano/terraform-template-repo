@@ -1,15 +1,13 @@
 # terraform-template-repo
 
-## General
-
-Welcome to the **terraform-template-repo**! This repository serves as a foundation for your Terraform projects, providing a streamlined setup and management process. With a well-organized structure, comprehensive documentation, and automated workflows, you can focus on building your infrastructure with ease.
+An opinionated template repository designed to streamline Terraform projects.
 
 ## Purpose
 
-The purpose of this repository is to simplify the setup and management of your Terraform projects. It offers the following key features:
+The purpose of this repository is to simplify the setup and management of Terraform projects. It offers the following key features:
 
-- **Modular structure:** The repository is organized into logical modules to help you easily navigate and manage your Terraform configurations.
-- **Automated workflows:** The repository comes with a set of automated workflows to streamline your development process.
+- **Modular structure:** The repository is organized into logical modules to help you easily navigate and manage Terraform configurations.
+- **Automated workflows:** The repository comes with a set of automated workflows to streamline the development process.
 
 ## Layout
 
@@ -17,13 +15,13 @@ The purpose of this repository is to simplify the setup and management of your T
 
 The `terraform/` folder contains two subfolders: `environments/` and `modules/`.
 
-The `environments/` folder is where you can define different environments (e.g., development, staging, production) with their respective Terraform configurations. Each environment acts as a Terraform root module.
+The `environments/` folder is where one can define different environments (e.g., development, staging, production) with their respective Terraform configurations. Each environment acts as a Terraform root module.
 
 The `modules/` folder provides a dedicated space for organizing reusable Terraform modules that can be shared across environments. Each module acts as a Terraform child module.
 
 ### Workflows
 
-The `.github/workflows/` folder contains a set of automated workflows to streamline your development process. In particular, the following capabilities are provided:
+The `.github/workflows/` folder contains a set of automated workflows to streamline the development process. In particular, the following capabilities are provided:
 
 - Continuous integration
 - Deploy infrastructure
@@ -34,9 +32,9 @@ The `.github/workflows/` folder contains a set of automated workflows to streaml
 
 ![deploy](./assets/images/deploy.png)
 
-## Join the Community and Provide Your Feedback
+## Contributing
 
-Information on how to join the community and provide your feedback can be found in [CONTRIBUTING.md](/CONTRIBUTING.md).
+Information about contributing to this project can be found [here](/CONTRIBUTING.md).
 
 ## License
 
