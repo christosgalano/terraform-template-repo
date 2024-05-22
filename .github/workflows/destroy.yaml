@@ -38,7 +38,7 @@ jobs:
           secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: christosgalano
           minimum-approvals: 1
-          issue-title: "Approve infrastructure teardown for the ${{ inputs.environment }} environment."
+          issue-title: 'Approve the destruction of the ${{ inputs.environment }} environment.'
           exclude-workflow-initiator-as-approver: false
 
   terraform_destroy:
@@ -56,7 +56,7 @@ jobs:
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ">= 1.8, < 2.0"
+          terraform_version: '>= 1.8, < 2.0'
 
       - name: Terraform init
         run: terraform init
