@@ -2,6 +2,7 @@ name: Generate Documentation
 
 on:
   workflow_call:
+  workflow_dispatch:
 
 jobs:
   terraform_docs:
