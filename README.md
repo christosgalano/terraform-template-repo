@@ -9,7 +9,6 @@ Welcome to the **terraform-template-repo**! This repository serves as a foundati
 The purpose of this repository is to simplify the setup and management of your Terraform projects. It offers the following key features:
 
 - **Modular structure:** The repository is organized into logical modules to help you easily navigate and manage your Terraform configurations.
-- **Comprehensive documentation:** The `docs/` folder houses all the necessary documentation to help you effectively utilize this template repository.
 - **Automated workflows:** The repository comes with a set of automated workflows to streamline your development process.
 
 ## Layout
@@ -26,19 +25,14 @@ The `modules/` folder provides a dedicated space for organizing reusable Terrafo
 
 The `.github/workflows/` folder contains a set of automated workflows to streamline your development process. In particular, the following capabilities are provided:
 
+- Continuous integration
 - Deploy infrastructure
 - Destroy infrastructure
-- Validate Terraform modules
-- Generate documentation for Terraform modules
+- Generate documentation
 
-### Documentation
+![ci](./assets/images/ci.png)
 
-The `docs/` folder contains all the necessary documentation to help you effectively utilize this template repository. It contains information on how to effectively use this repository, how to set up your development environment, and how to use the automated workflows. Specifically, it contains the following files:
-
-- [**Usage guideline**](/docs/usage.md)
-- [**Manage environments**](/docs/environment_management.md)
-- [**Manage modules**](/docs/module_management.md)
-- [**Manage workflows**](/docs/workflows.md)
+![deploy](./assets/images/deploy.png)
 
 ## Join the Community and Provide Your Feedback
 

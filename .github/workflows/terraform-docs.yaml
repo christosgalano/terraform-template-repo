@@ -34,7 +34,7 @@ jobs:
           for env in ./environments/*; do terraform-docs $env -c $env/.terraform-docs.yaml; done
           for mod in ./modules/*; do terraform-docs $mod -c $mod/.terraform-docs.yaml; done
         working-directory: terraform
-      
+
       - name: Push changes
         run: |
           git config --global user.name "github-actions[bot]"
