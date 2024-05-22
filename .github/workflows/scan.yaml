@@ -64,7 +64,7 @@ jobs:
         uses: bridgecrewio/checkov-action@v12
         with:
           directory: ${{ env.ROOT_MODULE_DIRECTORY }}
-          config_file: .checkov.yaml
+          config_file: ${{ env.ROOT_MODULE_DIRECTORY }}/.checkov.yaml
           output_format: cli,junitxml
           output_file_path: console,checkov_results_junit.xml
 

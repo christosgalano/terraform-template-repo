@@ -1,6 +1,6 @@
 # Dependencies
 
-In order to keep up with our Terraform and GitHub Actions dependencies, we use Dependabot with the following [configuration](../.github/dependabot.yaml):
+To keep up with our Terraform and GitHub Actions dependencies, we use Dependabot with the following [configuration](../.github/dependabot.yaml):
 
 ```yaml
 version: 2
