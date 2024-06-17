@@ -33,7 +33,7 @@ jobs:
       issues: write
     steps:
       - name: Manual Workflow Approval
-        uses: trstringer/manual-approval@v1.9.0
+        uses: trstringer/manual-approval@v1.9.1
         with:
           secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: christosgalano
