@@ -41,7 +41,7 @@ jobs:
         working-directory: ${{ env.ROOT_MODULE_DIRECTORY }}
 
       - name: Install tflint
-        uses: terraform-linters/setup-tflint@v4
+        uses: terraform-linters/setup-tflint@v6
 
       - name: Tflint scan
         run: |
