@@ -21,7 +21,7 @@ jobs:
       ROOT_MODULE_DIRECTORY: terraform/environments/${{ inputs.environment }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
