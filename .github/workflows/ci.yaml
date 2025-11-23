@@ -16,7 +16,7 @@ jobs:
       environments: ${{ steps.select-environments.outputs.environments }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Find which environment/s changed
         uses: dorny/paths-filter@v3
