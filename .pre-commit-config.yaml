@@ -1,11 +1,40 @@
+# pre-commit install  # once per clone
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v6.0.0
     hooks:
       - id: check-yaml
       - id: check-json
+      - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: detect-private-key
+
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.88.0
+    rev: v1.109.2
     hooks:
       - id: terraform_fmt
+      - id: terraform_docs
+        args:
+          - --hook-config=--path-to-file=README.md
+          - --hook-config=--add-to-existing-file=true
+          - --args=--config=.terraform-docs.yml
+
+  - repo: local
+    hooks:
+      - id: opa-fmt
+        name: opa fmt
+        language: system
+        entry: opa fmt --fail --list
+        files: \.rego$
+      - id: opa-test
+        name: opa test
+        language: system
+        entry: opa test policy
+        pass_filenames: false
+        files: \.rego$
+      - id: trivy-config
+        name: trivy config
+        language: system
+        entry: trivy config --config trivy.yaml --quiet .
+        pass_filenames: false
+        files: \.tf$

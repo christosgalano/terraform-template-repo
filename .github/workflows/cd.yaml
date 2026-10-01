@@ -1,0 +1,77 @@
+# Runs after a merge to main (or by hand). Plans each affected environment in
+# promotion order, one at a time, and stops at the first failure. Each
+# environment re-checks policy on the exact plan, waits for approval on its
+# GitHub Environment, then applies that saved plan. See deploy.yaml.
+name: CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+      - 'policy/**'
+      - '.github/workflows/cd.yaml'
+      - '.github/workflows/deploy.yaml'
+      - '.github/actions/**'
+      - '.github/scripts/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options:
+          - all
+          - development
+          - staging
+          - production
+        default: all
+        description: Environment to deploy. "all" runs them in promotion order.
+
+permissions: {}
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      environments: ${{ steps.changes.outputs.environments }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: What changed
+        id: changes
+        env:
+          EVENT: ${{ github.event_name }}
+          SELECTED: ${{ inputs.environment }}
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [ "${EVENT}" = "workflow_dispatch" ] && [ "${SELECTED}" != "all" ]; then
+            echo "environments=[\"${SELECTED}\"]" >> "$GITHUB_OUTPUT"
+          else
+            # No "before" commit on a manual run, so that plans everything.
+            .github/scripts/changes.sh "${BEFORE_SHA}" "${HEAD_SHA}"
+          fi
+
+  deploy:
+    name: Deploy (${{ matrix.environment }})
+    needs: changes
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.environments != '[]'
+    strategy:
+      # One at a time, in promotion order; a failure or rejected approval stops
+      # the rest.
+      max-parallel: 1
+      fail-fast: true
+      matrix:
+        environment: ${{ fromJson(needs.changes.outputs.environments) }}
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      environment: ${{ matrix.environment }}
+    secrets: inherit

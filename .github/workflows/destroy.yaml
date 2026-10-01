@@ -1,3 +1,6 @@
+# Manual teardown of one environment. Plans the destroy, then waits for approval
+# on the environment before applying it. Typing the environment name again guards
+# against picking the wrong one.
 name: Destroy
 
 on:
@@ -10,60 +13,38 @@ on:
           - staging
           - production
         required: true
-        description: 'The environment root module to destroy.'
-      noop:
-        type: choice
-        options:
-          - 'true'
-          - 'false'
-        default: 'false'
+        description: Environment to destroy.
+      confirm:
+        type: string
         required: true
-        description: 'Noop (no operations) mode.'
+        description: Type the environment name again to confirm.
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event }}
-  cancel-in-progress: true
+permissions: {}
 
 jobs:
-  # Require approval in the form of an open issue in order to destroy the infrastructure.
-  approve-teardown:
-    name: Approve Infrastructure Teardown
+  confirm:
+    name: Confirm
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
     steps:
-      - name: Manual Workflow Approval
-        uses: trstringer/manual-approval@v1.12.0
-        with:
-          secret: ${{ secrets.GITHUB_TOKEN }}
-          approvers: christosgalano
-          minimum-approvals: 1
-          issue-title: 'Approve the destruction of the ${{ inputs.environment }} environment.'
-          exclude-workflow-initiator-as-approver: false
+      - name: Check confirmation
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "${CONFIRM}" != "${ENVIRONMENT}" ]; then
+            echo "::error::'${CONFIRM}' does not match '${ENVIRONMENT}'."
+            exit 1
+          fi
 
-  terraform_destroy:
-    name: Destroy Infrastructure
+  destroy:
+    name: Destroy (${{ inputs.environment }})
+    needs: confirm
     if: github.ref == 'refs/heads/main'
-    needs: approve-teardown
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: terraform/environments/${{ inputs.environment }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: '>= 1.8, < 2.0'
-
-      - name: Terraform init
-        run: terraform init
-
-      - name: Terraform plan
-        run: terraform plan -destroy -out=tfplan -input=false
-
-      - name: Terraform apply
-        if: github.event.inputs.noop == 'false'
-        run: terraform apply tfplan
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/deploy.yaml
+    with:
+      environment: ${{ inputs.environment }}
+      destroy: true
+    secrets: inherit

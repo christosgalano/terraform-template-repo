@@ -1,71 +1,134 @@
+# Reusable: plans one environment with the read-only identity, checks policy on
+# that plan, then waits for approval on the environment's GitHub Environment and
+# applies the saved plan. Called by cd.yaml (deploy) and destroy.yaml (destroy).
 name: Deploy
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       environment:
-        type: choice
-        options:
-          - development
-          - staging
-          - production
+        type: string
         required: true
-        description: 'The environment root module to deploy.'
-      noop:
-        type: choice
-        options:
-          - 'true'
-          - 'false'
-        default: 'false'
-        required: true
-        description: 'Noop (no operations) mode.'
+        description: Environment (folder under terraform/environments).
+      destroy:
+        type: boolean
+        default: false
+        description: Plan and apply a destroy instead of an update.
 
+permissions: {}
+
+# One run per environment at a time, and never cancel one halfway through.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event }}
-  cancel-in-progress: true
+  group: deploy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  TF_VERSION: 1.16.4
+  CONFTEST_VERSION: 0.71.0
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: 'false'
+  WORKDIR: terraform/environments/${{ inputs.environment }}
 
 jobs:
-  terraform_scan:
-    uses: ./.github/workflows/scan.yaml
+  plan:
+    name: Plan (${{ inputs.environment }})
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: read
-      checks: write
-      pull-requests: write
-    with:
-      environment: ${{ inputs.environment }}
-
-  terraform_test:
-    uses: ./.github/workflows/test.yaml
-    needs: terraform_scan
-    secrets: inherit
-    with:
-      suite: 'all'
-      environment: ${{ inputs.environment }}
-
-  terraform_deploy:
-    name: Deploy Infrastructure
-    needs: terraform_test
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: terraform/environments/${{ inputs.environment }}
+      id-token: write
+    outputs:
+      has_changes: ${{ steps.plan.outputs.has_changes }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Install Terraform
-        uses: hashicorp/setup-terraform@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          terraform_version: '>= 1.8, < 2.0'
+          persist-credentials: false
 
-      - name: Terraform init
-        run: terraform init
+      - uses: ./.github/actions/terraform-setup
+        with:
+          working-directory: ${{ env.WORKDIR }}
+          terraform-version: ${{ env.TF_VERSION }}
+          backend-config: ${{ vars.TF_BACKEND_CONFIG }}
 
-      - name: Terraform plan
-        run: terraform plan -out=tfplan -input=false
+      - uses: ./.github/actions/terraform-plan
+        id: plan
+        with:
+          environment: ${{ inputs.environment }}
+          working-directory: ${{ env.WORKDIR }}
+          destroy: ${{ inputs.destroy }}
+          conftest-version: ${{ env.CONFTEST_VERSION }}
 
+      - name: Upload saved plan
+        if: steps.plan.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: tfplan-${{ inputs.environment }}
+          path: ${{ env.WORKDIR }}/tfplan
+          retention-days: 1 # the plan file can contain sensitive values
+          if-no-files-found: error
+
+  apply:
+    name: ${{ inputs.destroy && 'Destroy' || 'Apply' }} (${{ inputs.environment }})
+    needs: plan
+    if: needs.plan.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    # Required reviewers and the main-only deployment branch rule live on this
+    # environment, together with the credentials of the apply identity.
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/terraform-setup
+        with:
+          working-directory: ${{ env.WORKDIR }}
+          terraform-version: ${{ env.TF_VERSION }}
+          backend-config: ${{ vars.TF_BACKEND_CONFIG }}
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: tfplan-${{ inputs.environment }}
+          path: ${{ env.WORKDIR }}
+
+      # Applies exactly what was reviewed. If state moved since the plan,
+      # Terraform rejects the stale plan instead of applying something else.
       - name: Terraform apply
-        if: github.event.inputs.noop == 'false'
-        run: terraform apply tfplan
+        id: apply
+        working-directory: ${{ env.WORKDIR }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Don't fail here so the report still runs; the last step fails the job.
+          set +e
+          terraform apply tfplan 2>&1 | tee apply.raw
+          EXIT_CODE=${PIPESTATUS[0]}
+          set -e
+          awk '{ gsub(/\033\[[0-9;]*[[:alpha:]]/, ""); print }' apply.raw > apply.out
+
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+          echo "Terraform apply exit code: ${EXIT_CODE}"
+
+      - name: Publish report
+        if: always()
+        uses: ./.github/actions/terraform-report
+        with:
+          environment: ${{ inputs.environment }}
+          working-directory: ${{ env.WORKDIR }}
+          phase: apply
+          command: terraform -chdir=${{ env.WORKDIR }} apply tfplan
+          log-path: ${{ env.WORKDIR }}/apply.out
+          outcome: ${{ steps.apply.outputs.exit_code == '0' && 'success' || 'failure' }}
+          exit-code: ${{ steps.apply.outputs.exit_code || '1' }}
+
+      - name: Fail job if apply failed
+        if: always()
+        env:
+          APPLY_EXIT_CODE: ${{ steps.apply.outputs.exit_code || '1' }}
+        run: |
+          if [ "${APPLY_EXIT_CODE}" != "0" ]; then
+            echo "Terraform apply failed with exit code ${APPLY_EXIT_CODE}."
+            exit 1
+          fi

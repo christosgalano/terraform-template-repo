@@ -1,0 +1,26 @@
+# Trivy misconfiguration scan for all Terraform in the repo.
+# Any finding fails the job. Accepted findings are suppressed inline, next to the
+# resource, with a reason (and an expiry where the decision is temporary), so a
+# reviewer sees the suppression in the same diff as the code it covers:
+#
+#   #trivy:ignore:<check-id>:exp:2027-03-31 reason
+exit-code: 1
+severity:
+  - LOW
+  - MEDIUM
+  - HIGH
+  - CRITICAL
+scan:
+  scanners:
+    - misconfig
+misconfiguration:
+  scanners:
+    - terraform
+  terraform:
+    exclude-downloaded-modules: false
+    # Without these Trivy evaluates the environments with unknown inputs and
+    # silently skips anything that depends on them (for_each, counts).
+    vars:
+      - terraform/environments/development/development.auto.tfvars
+      - terraform/environments/staging/staging.auto.tfvars
+      - terraform/environments/production/production.auto.tfvars

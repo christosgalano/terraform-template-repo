@@ -1,0 +1,43 @@
+name: Terraform setup
+description: Install Terraform, authenticate to your cloud and run terraform init.
+
+inputs:
+  working-directory:
+    description: Terraform root module.
+    required: true
+  terraform-version:
+    description: Terraform version.
+    required: true
+  backend-config:
+    description: Backend settings shared by every environment, one key=value per line (e.g. the state bucket). Empty when the backend needs none.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      with:
+        terraform_version: ${{ inputs.terraform-version }}
+        terraform_wrapper: false
+
+    # AUTHENTICATE HERE. Prefer OIDC federation over stored keys, and give plan
+    # jobs a read-only identity and apply jobs a separate, broader one (scope the
+    # apply identity to the GitHub Environment). For example:
+    #   - uses: aws-actions/configure-aws-credentials
+    #   - uses: azure/login
+    #   - uses: google-github-actions/auth
+    # Callers need `id-token: write` for OIDC.
+
+    - name: Terraform init
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        BACKEND_CONFIG: ${{ inputs.backend-config }}
+      run: |
+        args=()
+        while IFS= read -r line; do
+          [ -n "${line}" ] && args+=("-backend-config=${line}")
+        done <<<"${BACKEND_CONFIG}"
+        terraform init -input=false -lockfile=readonly "${args[@]+"${args[@]}"}"

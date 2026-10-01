@@ -1,32 +1,45 @@
-# sample\_module
+# sample_module
 
-This is a sample module.
+A single-purpose module. Replace it with your own; keep the shape: typed and validated inputs, documented outputs, and a `tests/` folder.
 
-## Usage
-
-Basic usage of this module is as follows:
 ```hcl
 module "example" {
-     source = "<module-path>"
+  source = "../../modules/sample_module"
+
+  name = "acme-dev"
 }
 ```
 
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+| ---- | ------- |
+| terraform | >= 1.10, < 2.0 |
+
 ## Providers
 
-No providers.
+| Name | Version |
+| ---- | ------- |
+| terraform | n/a |
 
 ## Resources
 
-No resources.
+| Name | Type |
+| ---- | ---- |
+| [terraform_data.this](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+| ---- | ----------- | ---- | ------- | :------: |
+| name | Resource name. | `string` | n/a | yes |
+| labels | Labels attached to the resource. | `map(string)` | `{}` | no |
 
 ## Outputs
 
-No outputs.
-
-## Modules
-
-No modules.
+| Name | Description |
+| ---- | ----------- |
+| id | Resource ID. |
+| name | Resource name. |
+<!-- END_TF_DOCS -->

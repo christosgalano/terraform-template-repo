@@ -1,3 +1,9 @@
-# These owners will be the default owners and reviewers for everything in the repo
+# Everything needs a review from the platform owner. Replace with your team.
+* @christosgalano
 
-* @christosgalano # switch with your yours
+# Guardrails: changes to policies, pipelines and scanner config are the ones
+# that can quietly weaken everything else.
+/policy/           @christosgalano
+/.github/          @christosgalano
+/trivy.yaml        @christosgalano
+/.tflint.hcl       @christosgalano

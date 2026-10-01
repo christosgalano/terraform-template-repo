@@ -1,0 +1,129 @@
+name: Terraform plan
+description: >-
+  Runs terraform plan, evaluates the OPA policies in policy/ against the exact
+  plan with conftest, publishes the report, and leaves tfplan next to the
+  configuration so a later job can apply it. Run terraform-setup first.
+
+inputs:
+  environment:
+    description: Environment name.
+    required: true
+  working-directory:
+    description: Terraform root module.
+    required: true
+  destroy:
+    description: Plan a destroy instead of an update. Policies are skipped, since they only judge what is created or changed.
+    required: false
+    default: "false"
+  conftest-version:
+    description: conftest version, without the leading v.
+    required: false
+    default: "0.71.0"
+
+outputs:
+  has_changes:
+    description: true when the plan contains changes.
+    value: ${{ steps.plan.outputs.has_changes }}
+
+runs:
+  using: composite
+  steps:
+    - name: Terraform plan
+      id: plan
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        DESTROY: ${{ inputs.destroy }}
+      run: |
+        set -euo pipefail
+        # Defaults so reporting is deterministic even on early failures.
+        echo "has_changes=false" >> "$GITHUB_OUTPUT"
+        echo "exit_code=0" >> "$GITHUB_OUTPUT"
+
+        # No state lock: plans run with a read-only identity and must never
+        # block an apply.
+        PLAN_ARGS=(-out=tfplan -lock=false)
+        [ "${DESTROY}" = "true" ] && PLAN_ARGS+=(-destroy)
+        echo "Running: terraform plan -detailed-exitcode ${PLAN_ARGS[*]}"
+
+        # set +e around the pipeline so the expected codes (0 = no changes,
+        # 2 = changes) don't abort the step and PIPESTATUS stays reliable.
+        set +e
+        terraform plan -detailed-exitcode "${PLAN_ARGS[@]}" 2>&1 | tee plan.raw
+        EXIT_CODE=${PIPESTATUS[0]}
+        set -e
+
+        # Strip ANSI colour codes for the report copy.
+        awk '{ gsub(/\033\[[0-9;]*[[:alpha:]]/, ""); print }' plan.raw > plan.out
+
+        echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+        case "${EXIT_CODE}" in
+          0) ;;
+          2) echo "has_changes=true" >> "$GITHUB_OUTPUT" ;;
+          *) echo "Terraform plan failed with exit code ${EXIT_CODE}"; exit "${EXIT_CODE}" ;;
+        esac
+
+        # Machine-readable plan for conftest.
+        terraform show -json tfplan > plan.json
+
+    - name: Install conftest
+      if: inputs.destroy != 'true'
+      shell: bash
+      env:
+        CONFTEST_VERSION: ${{ inputs.conftest-version }}
+      run: |
+        archive="conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+        base="https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}"
+        curl -fsSLO "${base}/${archive}"
+        curl -fsSL "${base}/checksums.txt" | grep " ${archive}$" | sha256sum -c -
+        tar -xzf "${archive}" conftest
+        sudo mv conftest /usr/local/bin/
+
+    # Policies see the plan that will actually be applied, so the same check on
+    # the PR and after the merge catches anything that skipped CI.
+    - name: Policy check (conftest)
+      id: conftest
+      if: inputs.destroy != 'true'
+      shell: bash
+      env:
+        PLAN_JSON: ${{ inputs.working-directory }}/plan.json
+        OUTPUT: ${{ runner.temp }}/conftest.txt
+      run: |
+        set -o pipefail
+        conftest test "${PLAN_JSON}" --policy policy --all-namespaces --no-color | tee "${OUTPUT}"
+
+    - name: Policy results (Markdown)
+      if: always() && inputs.destroy != 'true' && steps.plan.outcome == 'success'
+      shell: bash
+      env:
+        CONFTEST_OUTCOME: ${{ steps.conftest.outcome }}
+        OUTPUT: ${{ runner.temp }}/conftest.txt
+        REPORT: ${{ runner.temp }}/policy.md
+      run: |
+        {
+          if [ "${CONFTEST_OUTCOME}" = "success" ]; then
+            echo "**Policy check passed**"
+          else
+            echo "**Policy check failed**"
+          fi
+          echo
+          echo "<details><summary>Show policy output</summary>"
+          echo
+          echo '```'
+          cat "${OUTPUT}" 2>/dev/null || echo "not run"
+          echo '```'
+          echo "</details>"
+        } > "${REPORT}"
+
+    - name: Publish report
+      if: always()
+      uses: ./.github/actions/terraform-report
+      with:
+        environment: ${{ inputs.environment }}
+        working-directory: ${{ inputs.working-directory }}
+        phase: plan
+        command: terraform -chdir=${{ inputs.working-directory }} plan -lock=false${{ inputs.destroy == 'true' && ' -destroy' || '' }}
+        log-path: ${{ inputs.working-directory }}/plan.out
+        outcome: ${{ steps.plan.outcome || 'failure' }}
+        exit-code: ${{ steps.plan.outputs.exit_code || '1' }}
+        extra-markdown-path: ${{ runner.temp }}/policy.md

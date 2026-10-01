@@ -1,0 +1,23 @@
+formatter: markdown table
+version: ">= 0.20.0, < 1.0.0"
+
+# Injects the generated tables between the BEGIN_TF_DOCS/END_TF_DOCS markers in
+# each README and leaves the hand-written text above them alone.
+output:
+  file: README.md
+  mode: inject
+
+sort:
+  enabled: true
+  by: required
+
+settings:
+  anchor: false
+  default: true
+  escape: true
+  hide-empty: true
+  html: false
+  lockfile: false
+  required: true
+  sensitive: true
+  type: true

@@ -1,86 +1,238 @@
-name: Continuous Integration
+# Runs on every pull request to main. Every job here feeds the single CI gate,
+# so a PR cannot merge until static checks, the security scan, the policy tests,
+# the unit tests and the plan with policy evaluation are all green.
+name: CI
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "terraform/**"
-  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  TF_VERSION: 1.16.4
+  TFLINT_VERSION: v0.64.0
+  TRIVY_VERSION: v0.74.0
+  OPA_VERSION: 1.21.1
+  REGAL_VERSION: 0.43.0
+  CONFTEST_VERSION: 0.71.0
+  TERRAFORM_DOCS_VERSION: v0.24.0
+  TF_IN_AUTOMATION: 'true'
+  TF_INPUT: 'false'
 
 jobs:
-  select_environments:
-    name: Select Environments
+  changes:
+    name: Detect changes
     runs-on: ubuntu-latest
-    outputs:
-      environments: ${{ steps.select-environments.outputs.environments }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Find which environment/s changed
-        uses: dorny/paths-filter@v4
-        id: filter
-        with:
-          filters: |
-            modules:
-              - '**/terraform/modules/**'
-            development:
-              - '**/terraform/environments/development/**'
-            staging:
-              - '**/terraform/environments/staging/**'
-            production:
-              - '**/terraform/environments/production/**'
-
-      - name: Select environments
-        id: select-environments
-        run: |
-          environments=()
-          if [ "${{ steps.filter.outputs.development }}" == "true" ]; then
-            environments+=("development")
-          fi
-          if [ "${{ steps.filter.outputs.staging }}" == "true" ]; then
-            environments+=("staging")
-          fi
-          if [ "${{ steps.filter.outputs.production }}" == "true" ]; then
-            environments+=("production")
-          fi
-          if [ "${{ steps.filter.outputs.modules }}" == "true" ] || [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            environments=("development" "staging" "production")
-          fi
-          environments_json=$(jq -c -n '$ARGS.positional' --args "${environments[@]}")
-          echo "Selected environments: $environments_json"
-          echo "environments=$environments_json" >> $GITHUB_OUTPUT
-
-  terraform_scan:
-    uses: ./.github/workflows/scan.yaml
-    needs: select_environments
-    strategy:
-      fail-fast: false
-      matrix:
-        environment: ${{ fromJson(needs.select_environments.outputs.environments) }}
     permissions:
       contents: read
-      issues: read
-      checks: write
-      pull-requests: write
-    with:
-      environment: ${{ matrix.environment }}
+    outputs:
+      units: ${{ steps.changes.outputs.units }}
+      environments: ${{ steps.changes.outputs.environments }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
 
-  terraform_test:
-    uses: ./.github/workflows/test.yaml
-    needs: [terraform_scan, select_environments]
+      - name: What changed
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: .github/scripts/changes.sh "${BASE_SHA}" "${HEAD_SHA}"
+
+  static:
+    name: Format, validate, lint, docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive -diff
+
+      - name: terraform validate
+        run: |
+          for dir in terraform/environments/*/; do
+            echo "::group::validate ${dir}"
+            terraform -chdir="${dir}" init -backend=false -lockfile=readonly
+            terraform -chdir="${dir}" validate
+            echo "::endgroup::"
+          done
+
+      - uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: tflint
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # avoids rate limits when downloading rulesets
+        run: |
+          tflint --init --config "$GITHUB_WORKSPACE/.tflint.hcl"
+          tflint --recursive --config "$GITHUB_WORKSPACE/.tflint.hcl" --format compact
+
+      - name: terraform-docs is up to date
+        run: |
+          archive="terraform-docs-${TERRAFORM_DOCS_VERSION}-linux-amd64.tar.gz"
+          base="https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}"
+          curl -fsSLO "${base}/${archive}"
+          curl -fsSL "${base}/terraform-docs-${TERRAFORM_DOCS_VERSION}.sha256sum" | grep " ${archive}$" | sha256sum -c -
+          tar -xzf "${archive}" terraform-docs
+          for dir in terraform/modules/*/ terraform/stacks/*/ terraform/environments/*/; do
+            ./terraform-docs --config .terraform-docs.yml --output-check "${dir}" \
+              || { echo "::error::README in ${dir} is stale. Run: pre-commit run terraform_docs --all-files"; exit 1; }
+          done
+
+  security:
+    name: Trivy misconfiguration scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+          cache: true
+
+      - name: trivy config
+        run: |
+          set -o pipefail
+          trivy config --config trivy.yaml --format table . | tee trivy.txt
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "### Trivy"
+            echo '```'
+            cat trivy.txt 2>/dev/null || echo "no output"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  policy-tests:
+    name: Policy lint and unit tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: open-policy-agent/setup-opa@b2b258e089860efaadaaf71bf6e3aecb4a3eeff1 # v2.4.0
+        with:
+          version: ${{ env.OPA_VERSION }}
+
+      - uses: open-policy-agent/setup-regal@761188c3b435761fa254beca508a44875619648f # v2.0.0
+        with:
+          version: ${{ env.REGAL_VERSION }}
+
+      - name: opa fmt
+        run: opa fmt --fail --list policy
+
+      - name: regal lint
+        run: regal lint --format github policy
+
+      - name: opa test (coverage >= 90%)
+        run: |
+          opa test policy -v
+          coverage=$(opa test policy --coverage --format json | jq '.coverage')
+          echo "Policy coverage: ${coverage}%"
+          awk -v c="$coverage" 'BEGIN { exit !(c >= 90) }' || { echo "::error::Policy coverage ${coverage}% is below 90%"; exit 1; }
+
+  tests:
+    name: Terraform test (${{ matrix.unit }})
+    needs: changes
+    if: needs.changes.outputs.units != '[]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
-        environment: ${{ fromJson(needs.select_environments.outputs.environments) }}
-    secrets: inherit
-    with:
-      suite: 'contract'
-      environment: ${{ matrix.environment }}
+        unit: ${{ fromJson(needs.changes.outputs.units) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-  terraform_docs:
-    uses: ./.github/workflows/terraform-docs.yaml
-    needs: terraform_test
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          terraform_wrapper: false
+
+      # Unit tests use mocked providers: no credentials, nothing is created.
+      - name: terraform test
+        working-directory: ${{ matrix.unit }}
+        run: |
+          terraform init -backend=false
+          terraform test
+
+  plan:
+    name: Plan and policy check (${{ matrix.environment }})
+    needs: changes
+    if: needs.changes.outputs.environments != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJson(needs.changes.outputs.environments) }}
     permissions:
-      contents: write
+      contents: read
+      id-token: write # OIDC to your cloud, if terraform-setup authenticates with it
+      pull-requests: write # plan comment
+    env:
+      WORKDIR: terraform/environments/${{ matrix.environment }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/terraform-setup
+        with:
+          working-directory: ${{ env.WORKDIR }}
+          terraform-version: ${{ env.TF_VERSION }}
+          backend-config: ${{ vars.TF_BACKEND_CONFIG }}
+
+      - uses: ./.github/actions/terraform-plan
+        with:
+          environment: ${{ matrix.environment }}
+          working-directory: ${{ env.WORKDIR }}
+          conftest-version: ${{ env.CONFTEST_VERSION }}
+
+  # The only required status check. Matrix jobs are named per unit/environment
+  # and are skipped when nothing relevant changed, so branch protection points
+  # here instead: it fails if anything it depends on failed or was cancelled.
+  gate:
+    name: CI gate
+    if: always()
+    needs: [changes, static, security, policy-tests, tests, plan]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Check results
+        env:
+          RESULTS: ${{ toJson(needs) }}
+        run: |
+          echo "${RESULTS}" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          if echo "${RESULTS}" | jq -e '[.[].result] | any(. == "failure" or . == "cancelled")' >/dev/null; then
+            echo "::error::One or more required jobs failed."
+            exit 1
+          fi

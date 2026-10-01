@@ -1,0 +1,170 @@
+name: Terraform report
+description: >-
+  Renders a Terraform plan or apply log as Markdown (summary line, the command,
+  a one-line-per-resource diff, and the full output) and publishes it to the job
+  summary and, on pull requests, as a sticky PR comment. Both channels use the
+  same rendering so they never disagree.
+
+inputs:
+  environment:
+    description: Environment name.
+    required: true
+  working-directory:
+    description: Terraform root module, shown in the heading.
+    required: true
+  phase:
+    description: plan or apply.
+    required: true
+  command:
+    description: The Terraform command that produced the log, shown verbatim.
+    required: true
+  log-path:
+    description: ANSI-stripped Terraform output for this phase.
+    required: true
+  outcome:
+    description: Step outcome (success/failure).
+    required: true
+  exit-code:
+    description: Terraform exit code.
+    required: true
+  extra-markdown-path:
+    description: Optional Markdown appended to the report (e.g. policy results).
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Render report
+      shell: bash
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
+        WORKDIR: ${{ inputs.working-directory }}
+        PHASE: ${{ inputs.phase }}
+        TF_COMMAND: ${{ inputs.command }}
+        LOG_PATH: ${{ inputs.log-path }}
+        OUTCOME: ${{ inputs.outcome }}
+        EXIT_CODE: ${{ inputs.exit-code }}
+        EXTRA_MARKDOWN_PATH: ${{ inputs.extra-markdown-path }}
+      run: |
+        set -euo pipefail
+        report="${RUNNER_TEMP}/terraform-report-${ENVIRONMENT}-${PHASE}.md"
+        log="${LOG_PATH}"
+        [ -f "${log}" ] || : > "${log}"
+
+        # plan: exit 0 = no changes, 2 = changes. apply: 0 = success.
+        ok=false
+        if [ "${OUTCOME}" = "success" ] && { [ "${EXIT_CODE}" = "0" ] || [ "${EXIT_CODE}" = "2" ]; }; then ok=true; fi
+
+        # Summary line, as Terraform printed it.
+        if [ "${PHASE}" = "plan" ]; then
+          summary=$(grep -E '^(Plan: |No changes\.)' "${log}" | tail -1 | sed -E 's/^Plan: /**Plan:** /' || true)
+        else
+          summary=$(grep -E '^Apply complete!' "${log}" | tail -1 | sed -E 's/^Apply complete! /**Apply complete!** /' || true)
+        fi
+        if [ "${ok}" != "true" ]; then
+          summary="**${PHASE^} failed** (exit code ${EXIT_CODE})."
+        fi
+        [ -z "${summary}" ] && summary="**No changes.**"
+
+        # One line per resource, marked so the diff block colours it:
+        # + create (green), - destroy (red), ! update or replace (orange).
+        if [ "${PHASE}" = "plan" ]; then
+          diff=$(sed -nE \
+            -e 's/^  # (.+) will be created$/+\1 will be created/p' \
+            -e 's/^  # (.+) will be destroyed$/-\1 will be destroyed/p' \
+            -e 's/^  # (.+) will be updated in-place$/!\1 will be updated in-place/p' \
+            -e 's/^  # (.+) must be replaced$/!\1 must be replaced/p' \
+            -e 's/^  # (.+) will be replaced, as requested$/!\1 will be replaced, as requested/p' \
+            "${log}" || true)
+        else
+          diff=$(sed -nE \
+            -e 's/^(.+): Creation complete after .*/+\1 created/p' \
+            -e 's/^(.+): Destruction complete after .*/-\1 destroyed/p' \
+            -e 's/^(.+): Modifications complete after .*/!\1 updated in-place/p' \
+            "${log}" || true)
+          # Resources that errored, with the error title and the first line of the
+          # API error, so a failed create or update is as visible as a success.
+          failed=$(awk '
+            /^│ Error: /                  { title = $0; sub(/^│ Error: /, "", title); code = ""; next }
+            /^│   with .*,$/              { addr = $3; sub(/,$/, "", addr); next }
+            /^│ [A-Za-z]+\.[A-Za-z]+: /   { if (code == "") { code = $2; sub(/:$/, "", code) } }
+            /^╵/                          { if (addr != "") print "-" addr " FAILED: " title (code != "" ? " (" code ")" : ""); addr = "" }
+          ' "${log}" || true)
+          [ -n "${failed}" ] && diff=$(printf '%s\n%s' "${diff}" "${failed}" | sed '/^$/d')
+        fi
+        changes=$(printf '%s' "${diff}" | grep -c . || true)
+        failures=$(printf '%s' "${diff}" | grep -c ' FAILED: ' || true)
+
+        # Full output, without the refresh noise before the actions block
+        # (plan) or the progress lines (apply).
+        if [ "${PHASE}" = "plan" ]; then
+          full=$(sed -nE '/^(Terraform used the selected|Terraform will perform|No changes\.|Error:|│ Error)/,$p' "${log}")
+        else
+          full=$(grep -vE 'Reading\.\.\.|Read complete after|Refreshing state\.\.\.|Still (creating|modifying|destroying)\.\.\.' "${log}" || true)
+        fi
+        [ -z "${full}" ] && full=$(cat "${log}")
+        full=$(printf '%s\n' "${full}" | head -c 55000)
+
+        # Failures open the full output, since that's where the error is.
+        open_full=""
+        [ "${ok}" != "true" ] && open_full=" open"
+
+        {
+          echo "<!-- terraform-report:${ENVIRONMENT}:${PHASE} -->"
+          echo "Results for commit ${GITHUB_SHA::8}."
+          echo
+          echo "### Terraform ${PHASE} result — \`${WORKDIR}\` / \`${ENVIRONMENT}\`"
+          echo
+          echo "${summary}"
+          echo
+          echo '```sh'
+          echo "${TF_COMMAND}"
+          echo '```'
+          echo
+          if [ "${changes}" -gt 0 ]; then
+            if [ "${PHASE}" = "apply" ]; then
+              label="Applied $((changes - failures)) change(s), ${failures} failed."
+            else
+              label="Diff of ${changes} change(s)."
+            fi
+            echo "<details open><summary>${label}</summary>"
+            echo
+            echo '```diff'
+            printf '%s\n' "${diff}"
+            echo '```'
+            echo "</details>"
+            echo
+          fi
+          echo "<details${open_full}><summary>Full ${PHASE} output</summary>"
+          echo
+          echo '```hcl'
+          printf '%s\n' "${full:-no output}"
+          echo '```'
+          echo "</details>"
+          if [ -n "${EXTRA_MARKDOWN_PATH}" ] && [ -s "${EXTRA_MARKDOWN_PATH}" ]; then
+            echo
+            cat "${EXTRA_MARKDOWN_PATH}"
+          fi
+          echo
+          echo "<sub>[Workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})</sub>"
+        } > "${report}"
+
+        cat "${report}" >> "${GITHUB_STEP_SUMMARY}"
+        echo "REPORT_PATH=${report}" >> "${GITHUB_ENV}"
+
+    - name: Sticky PR comment
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      env:
+        MARKER: "<!-- terraform-report:${{ inputs.environment }}:${{ inputs.phase }} -->"
+      with:
+        script: |
+          const body = require('fs').readFileSync(process.env.REPORT_PATH, 'utf8');
+          const comments = await github.paginate(github.rest.issues.listComments, { ...context.repo, issue_number: context.issue.number, per_page: 100 });
+          const existing = comments.find((c) => c.user.type === 'Bot' && c.body.startsWith(process.env.MARKER));
+          if (existing) {
+            await github.rest.issues.updateComment({ ...context.repo, comment_id: existing.id, body });
+          } else {
+            await github.rest.issues.createComment({ ...context.repo, issue_number: context.issue.number, body });
+          }

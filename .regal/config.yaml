@@ -1,0 +1,34 @@
+rules:
+  style:
+    line-length:
+      max-line-length: 250
+      level: warning
+      ignore:
+        files:
+          - "*_test.rego"
+    prefer-some-in-iteration:
+      level: error
+      ignore:
+        files:
+          - "*_test.rego"
+  testing:
+    test-outside-test-package:
+      level: error
+  performance:
+    with-outside-test-context:
+      # Test helpers wrap `with`; they are only called from tests.
+      level: error
+      ignore:
+        files:
+          - "*_test.rego"
+  imports:
+    avoid-importing-input:
+      level: ignore
+  custom:
+    naming-convention:
+      level: error
+      conventions:
+        # Package names: lowercase letters and underscores only.
+        - pattern: '^[a-z_]+(\.[a-z_]+)*$'
+          targets:
+            - package
