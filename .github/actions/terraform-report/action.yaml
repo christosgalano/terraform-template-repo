@@ -1,7 +1,7 @@
 name: Terraform report
 description: >-
   Renders a Terraform plan or apply log as Markdown (summary line, the command,
-  a one-line-per-resource diff, and the full output) and publishes it to the job
+  a one-line-per-resource diff, and the full output when it adds something) and publishes it to the job
   summary and, on pull requests, as a sticky PR comment. Both channels use the
   same rendering so they never disagree.
 
@@ -110,11 +110,14 @@ runs:
         open_full=""
         [ "${ok}" != "true" ] && open_full=" open"
 
+        # Full output is for reviewing a plan or debugging a failure. A clean
+        # apply is already covered by the per-resource list.
+        show_full=false
+        if [ "${ok}" != "true" ] || { [ "${PHASE}" = "plan" ] && [ "${changes}" -gt 0 ]; }; then show_full=true; fi
+
         {
           echo "<!-- terraform-report:${ENVIRONMENT}:${PHASE} -->"
-          echo "Results for commit ${GITHUB_SHA::8}."
-          echo
-          echo "### Terraform ${PHASE} result — \`${WORKDIR}\` / \`${ENVIRONMENT}\`"
+          echo "### Terraform ${PHASE} — \`${ENVIRONMENT}\`"
           echo
           echo "${summary}"
           echo
@@ -136,18 +139,23 @@ runs:
             echo "</details>"
             echo
           fi
-          echo "<details${open_full}><summary>Full ${PHASE} output</summary>"
-          echo
-          echo '```hcl'
-          printf '%s\n' "${full:-no output}"
-          echo '```'
-          echo "</details>"
+          if [ "${show_full}" = "true" ]; then
+            echo "<details${open_full}><summary>Full ${PHASE} output</summary>"
+            echo
+            echo '```hcl'
+            printf '%s\n' "${full:-no output}"
+            echo '```'
+            echo "</details>"
+          fi
           if [ -n "${EXTRA_MARKDOWN_PATH}" ] && [ -s "${EXTRA_MARKDOWN_PATH}" ]; then
             echo
             cat "${EXTRA_MARKDOWN_PATH}"
           fi
-          echo
-          echo "<sub>[Workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})</sub>"
+          # The run page already shows commit and run; the PR comment needs them.
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            echo
+            echo "<sub>Commit ${GITHUB_SHA::8} · [workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})</sub>"
+          fi
         } > "${report}"
 
         cat "${report}" >> "${GITHUB_STEP_SUMMARY}"

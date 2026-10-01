@@ -40,7 +40,7 @@ Modules and stacks have unit tests in `tests/` (`terraform test`, mocked provide
 
 **Destroy** is manual: confirm by typing the environment name, review the destroy plan, approve on the environment.
 
-Every plan and apply is written to the job summary, and PR plans also to a sticky comment: the summary line, the command, one line per resource (`+` create, `-` destroy, `!` update or replace, failed resources included) and the full output.
+Every plan and apply is written to the job summary, and PR plans also to a sticky comment: the summary line, one line per resource (`+` create, `-` destroy, `!` update or replace, failed resources included) and, for plans with changes and for failures, the full output (collapsed).
 
 ### What runs when
 
@@ -64,7 +64,7 @@ Every plan and apply is written to the job summary, and PR plans also to a stick
 1. Create your repository from this template and replace `@christosgalano` in `.github/CODEOWNERS`.
 2. In each environment's `terraform.tf`, add your provider and backend. Remote state is required for CD, because the apply runs on a fresh runner. Put shared backend settings (one `key=value` per line) in the `TF_BACKEND_CONFIG` repository variable.
 3. Authenticate to your cloud in `.github/actions/terraform-setup/action.yaml`. Prefer OIDC. Plans should use a read-only identity.
-4. Create the GitHub Environments `development`, `staging` and `production`. Add required reviewers, limit deployments to `main`, and keep the apply identity's credentials on the environment.
+4. Create the GitHub Environments `development`, `staging` and `production`. Add required reviewers (without them plan and apply run back to back), limit deployments to `main`, and keep the apply identity's credentials on the environment.
 5. Require the **CI gate** check in a branch ruleset.
 6. Enable your provider's ruleset in `.tflint.hcl` and add rules under `policy/terraform/<provider>/`.
 7. Replace `sample_module` and `sample_stack`.
